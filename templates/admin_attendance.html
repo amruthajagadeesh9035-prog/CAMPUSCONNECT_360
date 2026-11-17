@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Attendance Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <p>Admin Attendance Report</p>
+</header>
+
+<nav>
+    <a href="/">Home</a>
+    <a href="/events">Events</a>
+    <a href="/add-event">Add Event</a>
+    <a href="/admin-attendance">Attendance Report</a>
+</nav>
+
+<section>
+    <h2>Student Attendance Records</h2>
+
+    <table class="attendance-table">
+        <tr>
+            <th>Student Name</th>
+            <th>Email</th>
+            <th>Event Name</th>
+            <th>Status</th>
+        </tr>
+
+        {% for record in records %}
+        <tr>
+            <td>{{ record.name }}</td>
+            <td>{{ record.email }}</td>
+            <td>{{ record.title }}</td>
+            <td>{{ record.status }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">No attendance records available.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</section>
+
+<footer>
+    <p>© 2026 CAMPUSCONNECT 360</p>
+</footer>
+
+</body>
+</html>

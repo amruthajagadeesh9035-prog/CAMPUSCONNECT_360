@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+        }
+
+        header {
+            background: #243b80;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .container {
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin: 15px 0;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px #ddd;
+        }
+
+        a {
+            display: inline-block;
+            background: #243b80;
+            color: white;
+            padding: 12px 18px;
+            margin: 8px;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+
+        a:hover {
+            background: #4169b1;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>CampusConnect 360</h1>
+    <p>Student Dashboard</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Welcome, {{ student.name }}!</h2>
+        <p>Manage your campus activities from here.</p>
+    </div>
+
+    <div class="card">
+        <h3>My Profile</h3>
+        <p>Name: {{ student.name }}</p>
+        <p>Email: {{ student.email }}</p>
+        <a href="{{ url_for('student_profile') }}">View Profile</a>
+    </div>
+
+    <div class="card">
+        <h3>Campus Activities</h3>
+
+        <a href="{{ url_for('events') }}">View Events</a>
+
+        <a href="{{ url_for('event_registration') }}">
+            Register for Events
+        </a>
+
+        <a href="{{ url_for('announcements') }}">
+            View Announcements
+        </a>
+
+        <a href="{{ url_for('attendance') }}">Mark Attendance</a>
+
+        <a href="{{ url_for('certificates') }}">Certificates</a>
+        <a href="{{ url_for('home') }}" class="btn">Home</a>
+    </div>
+
+    <div class="card">
+        <h3>Student Feedback</h3>
+        <p>Share your suggestions and rate campus events.</p>
+        <a href="{{ url_for('feedback') }}">Give Feedback</a>
+    </div>
+
+    <div class="card">
+        <h3>Student Notifications</h3>
+        <p>Read important college updates and messages from the admin.</p>
+        <a href="{{ url_for('notifications') }}">View Notifications</a>
+    </div>
+
+    <div class="card">
+        <h3>Account</h3>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+</div>
+
+</body>
+</html>

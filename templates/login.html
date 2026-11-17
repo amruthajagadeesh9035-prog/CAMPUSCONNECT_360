@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <p>Student Login</p>
+</header>
+
+<section>
+    <h2>Welcome Back!</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form action="/login" method="POST" class="form-box">
+        <input type="email" name="email" placeholder="Enter Email" required>
+        <input type="password" name="password" placeholder="Enter Password" required>
+        <button type="submit" class="btn">Login</button>
+    </form>
+
+    <p>Don't have an account? <a href="/register">Register here</a></p>
+</section>
+
+</body>
+</html>

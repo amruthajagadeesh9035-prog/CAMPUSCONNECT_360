@@ -1,0 +1,320 @@
+
+/* ==================================
+   CAMPUSCONNECT 360
+   Modern Blue-Purple Gradient Theme
+================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(
+        135deg,
+        #667eea,
+        #764ba2,
+        #6dd5ed
+    );
+    background-attachment: fixed;
+    color: #24304a;
+    line-height: 1.6;
+}
+
+/* Main Container */
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 35px auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.94);
+    border-radius: 20px;
+    box-shadow: 0 12px 35px rgba(30, 20, 80, 0.18);
+}
+
+/* Headings */
+
+h1, h2, h3 {
+    color: #34256f;
+    margin-bottom: 18px;
+}
+
+h1 {
+    font-size: 32px;
+    font-weight: 800;
+}
+
+h2 {
+    font-size: 25px;
+}
+
+/* Navigation Bar */
+
+nav {
+    background: linear-gradient(90deg, #302b63, #6b4db8);
+    padding: 18px 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    box-shadow: 0 5px 18px rgba(25, 20, 65, 0.25);
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+nav a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Buttons */
+
+button,
+.btn {
+    display: inline-block;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+button:hover,
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 18px rgba(102, 126, 234, 0.35);
+}
+
+/* Forms */
+
+form {
+    margin-top: 20px;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 13px;
+    margin: 9px 0 17px;
+    border: 1px solid #d8d5ee;
+    border-radius: 9px;
+    background: #fafaff;
+    font-size: 15px;
+    outline: none;
+    transition: 0.3s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #764ba2;
+    box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.13);
+}
+
+/* Cards */
+
+.card,
+.graph-card,
+.stat-card {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(50, 40, 100, 0.10);
+    margin-bottom: 22px;
+    transition: 0.3s;
+}
+
+.card:hover,
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(50, 40, 100, 0.16);
+}
+
+/* Dashboard Statistics */
+
+.stats-container,
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 22px;
+    margin: 25px 0;
+}
+
+.stat-card {
+    border-top: 5px solid #764ba2;
+    text-align: center;
+}
+
+.stat-card h2 {
+    color: #667eea;
+    font-size: 34px;
+}
+
+/* Quick Actions */
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+    margin: 25px 0;
+}
+
+.quick-actions a {
+    display: block;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 20px;
+    border-radius: 13px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.quick-actions a:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(80, 60, 160, 0.25);
+}
+
+/* Tables */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    color: white;
+    padding: 14px;
+    text-align: left;
+}
+
+td {
+    padding: 13px;
+    border-bottom: 1px solid #eeeaf7;
+}
+
+tr:hover td {
+    background: #f4f2ff;
+}
+
+/* Messages */
+
+.flash,
+.alert {
+    background: #e9e5ff;
+    color: #49328c;
+    padding: 13px;
+    border-radius: 9px;
+    margin: 15px 0;
+    border-left: 5px solid #764ba2;
+}
+
+/* Links */
+
+a {
+    color: #6545ad;
+}
+
+a:hover {
+    color: #39236f;
+}
+
+/* Chart Containers */
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 350px;
+}
+
+.graph-card {
+    padding: 25px;
+}
+
+/* Footer */
+
+footer {
+    text-align: center;
+    padding: 22px;
+    margin-top: 35px;
+    color: white;
+    background: rgba(48, 43, 99, 0.85);
+}
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+
+    .container {
+        width: 94%;
+        padding: 18px;
+        margin: 20px auto;
+    }
+
+    h1 {
+        font-size: 26px;
+    }
+
+    nav {
+        gap: 7px;
+        padding: 14px;
+    }
+
+    nav a {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .stats-container,
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .chart-container {
+        height: 280px;
+    }
+
+    table {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .stats-container,
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 23px;
+    }
+}

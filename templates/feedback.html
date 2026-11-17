@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Feedback</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+        }
+
+        header {
+            background: #243b80;
+            color: white;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .container {
+            width: 85%;
+            max-width: 650px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px #ddd;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #243b80;
+            color: white;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #4169b1;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <h2>Student Feedback</h2>
+</header>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>Share Your Feedback</h2>
+
+        <form method="POST" action="{{ url_for('submit_feedback') }}">
+
+            <label>Select Event</label>
+
+            <select name="event_id">
+                <option value="">General Feedback</option>
+
+                {% for event in events %}
+                <option value="{{ event.id }}">
+                    {{ event.title }}
+                </option>
+                {% endfor %}
+
+            </select>
+
+            <label>Rating</label>
+
+            <select name="rating" required>
+                <option value="">Select Rating</option>
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Very Good</option>
+                <option value="3">3 - Good</option>
+                <option value="2">2 - Average</option>
+                <option value="1">1 - Needs Improvement</option>
+            </select>
+
+            <label>Your Feedback</label>
+
+            <textarea name="feedback_text"
+                      rows="5"
+                      placeholder="Write your feedback here..."
+                      required></textarea>
+
+            <button type="submit">Submit Feedback</button>
+
+        </form>
+
+    </div>
+
+    <p>
+        <a href="{{ url_for('student_dashboard') }}">
+            Back to Student Dashboard
+        </a>
+    </p>
+
+</div>
+
+</body>
+</html>

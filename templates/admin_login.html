@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | CAMPUSCONNECT 360</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <p>Administrator Portal</p>
+</header>
+
+<section>
+    <h2>Admin Login</h2>
+
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form action="/admin-login" method="POST" class="form-box">
+        <input type="text" name="username"
+               placeholder="Admin Username" required>
+
+        <input type="password" name="password"
+               placeholder="Admin Password" required>
+
+        <button type="submit" class="btn">Login as Admin</button>
+    </form>
+
+    <p><a href="/">Back to Home</a></p>
+</section>
+
+<footer>
+    <p>© 2026 CAMPUSCONNECT 360</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Campus Event</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <p>Admin - Add New Event</p>
+</header>
+
+<section>
+    <h2>Create Campus Event</h2>
+
+    <form action="/add-event" method="POST" class="form-box">
+
+        <input type="text" name="title"
+               placeholder="Enter Event Name" required>
+
+        <textarea name="description"
+                  placeholder="Enter Event Description"
+                  required></textarea>
+
+        <label>Event Date</label>
+        <input type="date" name="event_date" required>
+
+        <input type="text" name="location"
+               placeholder="Enter Event Location" required>
+
+        <button type="submit" class="btn">Add Event</button>
+
+    </form>
+</section>
+
+</body>
+</html>

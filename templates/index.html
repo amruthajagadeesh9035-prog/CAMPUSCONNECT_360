@@ -1,0 +1,544 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CAMPUSCONNECT 360 | Smart Campus Portal</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+          rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #080d20;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation */
+        .topbar {
+            width: 100%;
+            padding: 20px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(12, 18, 43, 0.9);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(15px);
+        }
+
+        .logo {
+            font-size: 23px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: white;
+        }
+
+        .logo span {
+            color: #65d5ff;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #dce5ff;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #65d5ff;
+        }
+
+        .nav-login {
+            padding: 11px 19px;
+            border-radius: 30px;
+            background: linear-gradient(90deg,#5865f2,#9b5cff);
+            color: white !important;
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 650px;
+            padding: 100px 8%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 80% 30%,rgba(116,70,255,.35),transparent 35%),
+                radial-gradient(circle at 15% 80%,rgba(0,195,255,.2),transparent 35%),
+                linear-gradient(135deg,#080d20,#111b42,#17133b);
+        }
+
+        .hero-content {
+            max-width: 650px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tagline {
+            display: inline-block;
+            padding: 10px 18px;
+            border: 1px solid rgba(101,213,255,.4);
+            border-radius: 30px;
+            color: #76ddff;
+            background: rgba(101,213,255,.08);
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 {
+            font-size: clamp(42px,6vw,76px);
+            line-height: 1.08;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(90deg,#65d5ff,#a78bfa,#ff85d5);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .hero p {
+            color: #bdc8e8;
+            font-size: 16px;
+            line-height: 1.9;
+            max-width: 550px;
+            margin-bottom: 35px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .hero-btn {
+            display: inline-block;
+            padding: 15px 27px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: .3s;
+        }
+
+        .primary-btn {
+            background: linear-gradient(90deg,#5965f2,#a05cff);
+            color: white;
+            box-shadow: 0 10px 30px rgba(100,80,255,.3);
+        }
+
+        .secondary-btn {
+            border: 1px solid rgba(255,255,255,.3);
+            color: white;
+            background: rgba(255,255,255,.05);
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Hero visual */
+        .hero-visual {
+            width: 390px;
+            min-width: 280px;
+            height: 390px;
+            border-radius: 35px;
+            border: 1px solid rgba(255,255,255,.18);
+            background: linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.03));
+            box-shadow: 0 25px 80px rgba(0,0,0,.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transform: rotate(3deg);
+        }
+
+        .visual-circle {
+            width: 235px;
+            height: 235px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#5ce1ff,#775cff,#c45cff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+            box-shadow: 0 0 70px rgba(100,110,255,.5);
+        }
+
+        .floating-label {
+            position: absolute;
+            background: #171f43;
+            border: 1px solid rgba(255,255,255,.15);
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .label-one {
+            top: 35px;
+            left: -35px;
+        }
+
+        .label-two {
+            bottom: 35px;
+            right: -35px;
+        }
+
+        /* Sections */
+        .section {
+            padding: 85px 8%;
+        }
+
+        .section-heading {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-heading small {
+            color: #65d5ff;
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+
+        .section-heading h2 {
+            font-size: 36px;
+            color: white;
+            margin: 15px 0;
+        }
+
+        .section-heading p {
+            color: #aab7d8;
+        }
+
+        /* Feature cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(230px,1fr));
+            gap: 22px;
+        }
+
+        .feature-card {
+            text-decoration: none;
+            color: white;
+            padding: 30px;
+            border-radius: 22px;
+            background: linear-gradient(145deg,#151f43,#10172f);
+            border: 1px solid rgba(255,255,255,.09);
+            transition: .35s;
+            min-height: 210px;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-9px);
+            border-color: #65d5ff;
+            box-shadow: 0 15px 35px rgba(50,100,255,.16);
+        }
+
+        .feature-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 16px;
+            background: linear-gradient(135deg,#5269f5,#a05cff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 27px;
+            margin-bottom: 22px;
+        }
+
+        .feature-card h3 {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: #aab7d8;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* Highlight */
+        .highlight {
+            margin: 10px 8% 80px;
+            padding: 55px;
+            border-radius: 28px;
+            background:
+                radial-gradient(circle at 90% 10%,rgba(155,92,255,.3),transparent 35%),
+                linear-gradient(120deg,#18285a,#28205b);
+            border: 1px solid rgba(255,255,255,.12);
+            text-align: center;
+        }
+
+        .highlight h2 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        .highlight p {
+            color: #c5d0f0;
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 35px 8%;
+            text-align: center;
+            color: #9caaca;
+            background: #060a18;
+            border-top: 1px solid rgba(255,255,255,.1);
+            font-size: 13px;
+        }
+
+        footer strong {
+            color: #65d5ff;
+        }
+
+        @media(max-width:850px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 75px;
+            }
+
+            .hero-content {
+                margin: auto;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-visual {
+                width: 300px;
+                height: 300px;
+                margin: 20px auto;
+            }
+
+            .visual-circle {
+                width: 175px;
+                height: 175px;
+                font-size: 75px;
+            }
+
+            .topbar {
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .nav-links {
+                justify-content: center;
+            }
+        }
+
+        @media(max-width:500px) {
+            .nav-links {
+                gap: 13px;
+            }
+
+            .hero {
+                padding-left: 5%;
+                padding-right: 5%;
+            }
+
+            .section {
+                padding: 60px 5%;
+            }
+
+            .highlight {
+                margin: 10px 5% 50px;
+                padding: 35px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+    <header class="topbar">
+        <div class="logo">CAMPUS<span>CONNECT</span> 360</div>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="#features">Features</a>
+            <a href="{{ url_for('events') }}">Events</a>
+            <a href="{{ url_for('announcements') }}">Announcements</a>
+            <a href="{{ url_for('login') }}" class="nav-login">Student Login</a>
+            <a href="{{ url_for('admin_login') }}">Admin</a>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <div class="tagline">
+                ✦ SMART CAMPUS • CONNECTED FUTURE
+            </div>
+
+            <h1>
+                Your Campus.<br>
+                Your World.<br>
+                <span>One Connection.</span>
+            </h1>
+
+            <p>
+                Welcome to CAMPUSCONNECT 360 — a smarter digital campus
+                experience. Discover events, manage attendance, explore
+                announcements, access certificates and stay connected
+                with your college community.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="{{ url_for('register') }}" class="hero-btn primary-btn">
+                    Get Started →
+                </a>
+
+                <a href="{{ url_for('login') }}" class="hero-btn secondary-btn">
+                    Student Login
+                </a>
+            </div>
+
+        </div>
+
+        <div class="hero-visual">
+            <div class="visual-circle">🎓</div>
+
+            <div class="floating-label label-one">
+                ✨ Smart Campus
+            </div>
+
+            <div class="floating-label label-two">
+                🚀 Learn • Connect • Grow
+            </div>
+        </div>
+
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section" id="features">
+
+        <div class="section-heading">
+            <small>EXPLORE OUR PLATFORM</small>
+            <h2>Everything in One Place</h2>
+            <p>Your complete digital campus experience.</p>
+        </div>
+
+        <div class="feature-grid">
+
+            <a href="{{ url_for('login') }}" class="feature-card">
+                <div class="feature-icon">👨‍🎓</div>
+                <h3>Student Portal</h3>
+                <p>Access your student account, profile and personal dashboard.</p>
+            </a>
+
+            <a href="{{ url_for('events') }}" class="feature-card">
+                <div class="feature-icon">🎉</div>
+                <h3>Campus Events</h3>
+                <p>Explore college events and register for exciting activities.</p>
+            </a>
+
+            <a href="{{ url_for('announcements') }}" class="feature-card">
+                <div class="feature-icon">📢</div>
+                <h3>Announcements</h3>
+                <p>Stay updated with important college news and information.</p>
+            </a>
+
+            <a href="{{ url_for('login') }}" class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Attendance</h3>
+                <p>View your attendance information and participation records.</p>
+            </a>
+
+            <a href="{{ url_for('login') }}" class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>Certificates</h3>
+                <p>Access your certificates for eligible campus activities.</p>
+            </a>
+
+            <a href="{{ url_for('login') }}" class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Student Feedback</h3>
+                <p>Share feedback and help improve campus experiences.</p>
+            </a>
+
+            <a href="{{ url_for('login') }}" class="feature-card">
+                <div class="feature-icon">🔔</div>
+                <h3>Notifications</h3>
+                <p>Keep track of important updates and student notifications.</p>
+            </a>
+
+            <a href="{{ url_for('admin_login') }}" class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Admin Portal</h3>
+                <p>Manage students, events, announcements and campus activities.</p>
+            </a>
+
+        </div>
+
+    </section>
+
+    <!-- CAMPUS HIGHLIGHT -->
+    <section class="highlight">
+
+        <h2>One Campus. Endless Possibilities.</h2>
+
+        <p>
+            Bringing students, faculty and campus activities together
+            through one connected digital platform.
+        </p>
+
+        <a href="{{ url_for('register') }}" class="hero-btn primary-btn">
+            Join CAMPUSCONNECT 360 →
+        </a>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>
+            © 2026 <strong>CAMPUSCONNECT 360</strong>.
+            Connecting Campus, Creating Opportunities.
+        </p>
+    </footer>
+
+</body>
+</html>

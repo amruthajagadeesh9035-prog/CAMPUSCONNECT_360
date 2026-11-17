@@ -1,0 +1,834 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CAMPUSCONNECT 360 | Admin Command Center</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+          rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #080d20;
+            color: white;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 28px 18px;
+            background: #101832;
+            border-right: 1px solid rgba(255,255,255,.08);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .brand {
+            font-size: 19px;
+            font-weight: 900;
+            padding: 10px;
+            margin-bottom: 40px;
+        }
+
+        .brand span {
+            color: #65d5ff;
+        }
+
+        .menu-title {
+            color: #7483aa;
+            font-size: 10px;
+            letter-spacing: 2px;
+            margin: 25px 10px 12px;
+            font-weight: 800;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 13px 14px;
+            margin: 7px 0;
+            border-radius: 11px;
+            color: #b9c5e5;
+            font-size: 13px;
+            font-weight: 600;
+            transition: .3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: linear-gradient(90deg,#5265e9,#8b5cf6);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .logout {
+            margin-top: 35px !important;
+            color: #ff8c9c !important;
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            margin-left: 250px;
+            padding: 30px 35px;
+        }
+
+        /* TOP BAR */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 35px;
+        }
+
+        .topbar h2 {
+            font-size: 22px;
+            color: white;
+        }
+
+        .topbar p {
+            color: #8290b3;
+            font-size: 12px;
+            margin-top: 7px;
+        }
+
+        .admin-profile {
+            padding: 12px 18px;
+            background: #172344;
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 14px;
+            font-size: 13px;
+            color: #dce6ff;
+        }
+
+        .admin-profile span {
+            color: #65d5ff;
+            font-weight: 800;
+        }
+
+        /* WELCOME BANNER */
+        .welcome {
+            padding: 35px;
+            border-radius: 23px;
+            background:
+                radial-gradient(circle at 90% 10%,rgba(178,90,255,.35),transparent 35%),
+                radial-gradient(circle at 10% 100%,rgba(0,200,255,.2),transparent 35%),
+                linear-gradient(120deg,#17265a,#292052);
+            border: 1px solid rgba(255,255,255,.12);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome small {
+            color: #65d5ff;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .welcome h1 {
+            font-size: 34px;
+            margin: 15px 0;
+            color: white;
+        }
+
+        .welcome p {
+            color: #c4d0ef;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .welcome-symbol {
+            position: absolute;
+            right: 45px;
+            top: 25px;
+            font-size: 100px;
+            opacity: .18;
+        }
+
+        /* STATISTICS */
+        .section-title {
+            font-size: 19px;
+            margin: 35px 0 18px;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 18px;
+        }
+
+        .stat-card {
+            padding: 24px;
+            border-radius: 19px;
+            background: linear-gradient(145deg,#172344,#111a34);
+            border: 1px solid rgba(255,255,255,.08);
+            transition: .3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px);
+            border-color: #65d5ff;
+            box-shadow: 0 12px 30px rgba(60,100,255,.15);
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg,#5868ee,#9c5cff);
+        }
+
+        .stat-card h3 {
+            color: #9aa9ce;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .stat-number {
+            color: white;
+            font-size: 31px;
+            font-weight: 900;
+            margin-top: 10px;
+        }
+
+        /* CHARTS */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+        }
+
+        .graph-card {
+            padding: 25px;
+            border-radius: 20px;
+            background: #131e3b;
+            border: 1px solid rgba(255,255,255,.08);
+            min-width: 0;
+        }
+
+        .graph-card h3 {
+            color: white;
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .graph-card p {
+            color: #8190b4;
+            font-size: 11px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* QUICK ACTIONS */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 15px;
+        }
+
+        .action-card {
+            background: #172344;
+            padding: 20px 15px;
+            text-align: center;
+            border-radius: 16px;
+            color: #dce6ff;
+            border: 1px solid rgba(255,255,255,.08);
+            transition: .3s;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(135deg,#5265e9,#8755dc);
+            color: white;
+        }
+
+        .action-card div {
+            font-size: 27px;
+            margin-bottom: 12px;
+        }
+
+        /* TABLES */
+        .table-card {
+            background: #131e3b;
+            border: 1px solid rgba(255,255,255,.08);
+            padding: 22px;
+            border-radius: 20px;
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        .table-card h3 {
+            color: white;
+            margin-bottom: 18px;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 450px;
+        }
+
+        th {
+            background: #202e52;
+            color: #83dfff;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td, th {
+            padding: 15px 13px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,.07);
+        }
+
+        td {
+            color: #c8d2eb;
+            font-size: 12px;
+        }
+
+        tr:hover td {
+            background: rgba(255,255,255,.035);
+        }
+
+        .empty {
+            color: #91a0c3;
+            text-align: center;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 35px 10px;
+            color: #7584a8;
+            font-size: 12px;
+        }
+
+        footer span {
+            color: #65d5ff;
+            font-weight: 800;
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:1100px) {
+            .stats {
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-grid {
+                grid-template-columns: repeat(2,1fr);
+            }
+        }
+
+        @media(max-width:750px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 15px;
+            }
+
+            .brand {
+                margin-bottom: 10px;
+            }
+
+            .menu-title {
+                display: none;
+            }
+
+            .sidebar a {
+                display: inline-block;
+                padding: 10px;
+                margin: 3px;
+                font-size: 11px;
+            }
+
+            .logout {
+                margin-top: 3px !important;
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 20px 15px;
+            }
+
+            .welcome h1 {
+                font-size: 25px;
+            }
+
+            .welcome-symbol {
+                font-size: 65px;
+                right: 15px;
+                top: 15px;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
+        @media(max-width:450px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .welcome {
+                padding: 25px 20px;
+            }
+
+            .stat-number {
+                font-size: 27px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+    <div class="brand">
+        CAMPUS<span>CONNECT</span> 360
+    </div>
+
+    <div class="menu-title">MAIN MENU</div>
+
+    <a href="{{ url_for('admin_dashboard') }}" class="active">
+        🏠 Dashboard
+    </a>
+
+    <a href="{{ url_for('admin_students') }}">
+        👨‍🎓 Students
+    </a>
+
+    <a href="{{ url_for('add_event') }}">
+        🎉 Add Events
+    </a>
+
+    <a href="{{ url_for('events') }}">
+        📅 View Events
+    </a>
+
+    <a href="{{ url_for('admin_attendance') }}">
+        📊 Attendance
+    </a>
+
+    <div class="menu-title">COMMUNICATION</div>
+
+    <a href="{{ url_for('admin_feedback') }}">
+        💬 Feedback
+    </a>
+
+    <a href="{{ url_for('announcements') }}">
+        📢 Announcements
+    </a>
+
+    <a href="{{ url_for('admin_notifications') }}">
+        🔔 Notifications
+    </a>
+
+    <div class="menu-title">ACCOUNT</div>
+
+    <a href="{{ url_for('home') }}">
+        🌐 Home Page
+    </a>
+
+    <a href="{{ url_for('admin_logout') }}" class="logout">
+        ↪ Logout
+    </a>
+
+</aside>
+
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+
+        <div>
+            <h2>Admin Command Center</h2>
+            <p>Campus overview and management</p>
+        </div>
+
+        <div class="admin-profile">
+            🛡️ Administrator:
+            <span>{{ session.get('admin_username') }}</span>
+        </div>
+
+    </div>
+
+
+    <!-- WELCOME BANNER -->
+    <section class="welcome">
+
+        <div class="welcome-symbol">🎓</div>
+
+        <small>✦ CAMPUS MANAGEMENT SYSTEM</small>
+
+        <h1>
+            Welcome Back,
+            {{ session.get('admin_username') }}!
+        </h1>
+
+        <p>
+            Your campus command center is ready.
+            Monitor student activity, manage campus events,
+            track attendance and stay connected.
+        </p>
+
+    </section>
+
+
+    <!-- STATISTICS -->
+    <h2 class="section-title">Campus Overview</h2>
+
+    <section class="stats">
+
+        <div class="stat-card">
+            <div class="stat-icon">👨‍🎓</div>
+            <h3>Total Students</h3>
+            <div class="stat-number">{{ total_students }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">🎉</div>
+            <h3>Total Events</h3>
+            <div class="stat-number">{{ total_events }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <h3>Attendance Records</h3>
+            <div class="stat-number">{{ total_attendance }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <h3>Certificates</h3>
+            <div class="stat-number">{{ total_certificates }}</div>
+        </div>
+
+    </section>
+
+
+    <!-- ANALYTICS -->
+    <h2 class="section-title">Performance Analytics</h2>
+
+    <section class="charts-grid">
+
+        <div class="graph-card">
+            <h3>📈 Student Registration Analytics</h3>
+            <p>Monthly student registration overview</p>
+
+            <div class="chart-container">
+                <canvas id="studentRegistrationChart"></canvas>
+            </div>
+        </div>
+
+        <div class="graph-card">
+            <h3>🥧 Attendance Analytics</h3>
+            <p>Attendance status distribution</p>
+
+            <div class="chart-container">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- QUICK ACTIONS -->
+    <h2 class="section-title">Quick Actions</h2>
+
+    <section class="actions-grid">
+
+        <a href="{{ url_for('home') }}" class="action-card">
+            <div>🌐</div>
+            Home Page
+        </a>
+<a href="{{ url_for('admin_event_registrations') }}"
+   style="text-decoration:none; color:white; background:linear-gradient(135deg,#4338ca,#7c3aed); padding:25px; border-radius:15px; display:block; margin:15px 0;">
+
+    <h3>📋 Event Registration Management</h3>
+
+    <p>View students registered for campus events.</p>
+
+    <span>View Registrations →</span>
+
+</a>
+        <a href="{{ url_for('add_event') }}" class="action-card">
+            <div>➕</div>
+            Add Event
+        </a>
+
+        <a href="{{ url_for('admin_students') }}" class="action-card">
+            <div>👨‍🎓</div>
+            Manage Students
+        </a>
+
+        <a href="{{ url_for('events') }}" class="action-card">
+            <div>🎊</div>
+            View Events
+        </a>
+
+        <a href="{{ url_for('admin_attendance') }}" class="action-card">
+            <div>📋</div>
+            Attendance Report
+        </a>
+
+        <a href="{{ url_for('admin_feedback') }}" class="action-card">
+            <div>💬</div>
+            Manage Feedback
+        </a>
+
+        <a href="{{ url_for('announcements') }}" class="action-card">
+            <div>📢</div>
+            Announcements
+        </a>
+
+        <a href="{{ url_for('admin_notifications') }}" class="action-card">
+            <div>🔔</div>
+            Notifications
+        </a>
+
+    </section>
+
+
+    <!-- RECENT STUDENTS -->
+    <h2 class="section-title">Recent Registered Students</h2>
+
+    <div class="table-card">
+
+        <h3>👨‍🎓 Student Records</h3>
+
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+
+            {% for student in recent_students %}
+            <tr>
+                <td>{{ student.id }}</td>
+                <td>{{ student.name }}</td>
+                <td>{{ student.email }}</td>
+            </tr>
+
+            {% else %}
+            <tr>
+                <td colspan="3" class="empty">
+                    No students registered yet.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+
+    <!-- UPCOMING EVENTS -->
+    <h2 class="section-title">Upcoming Campus Events</h2>
+
+    <div class="table-card">
+
+        <h3>🎉 Event Schedule</h3>
+
+        <table>
+            <tr>
+                <th>Event Name</th>
+                <th>Date</th>
+                <th>Location</th>
+            </tr>
+
+            {% for event in upcoming_events %}
+            <tr>
+                <td>{{ event.title }}</td>
+                <td>{{ event.event_date }}</td>
+                <td>{{ event.location }}</td>
+            </tr>
+
+            {% else %}
+            <tr>
+                <td colspan="3" class="empty">
+                    No upcoming events available.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+
+    <footer>
+        © 2026 <span>CAMPUSCONNECT 360</span>
+        | Connecting Campus, Creating Opportunities
+    </footer>
+
+</main>
+
+
+<!-- CHART DATA -->
+<script>
+
+    Chart.defaults.color = '#b7c5e5';
+    Chart.defaults.font.family = 'Inter';
+
+    const registrationLabels =
+        {{ registration_labels | tojson }};
+
+    const registrationCounts =
+        {{ registration_counts | tojson }};
+
+    const registrationCtx = document.getElementById(
+        'studentRegistrationChart'
+    ).getContext('2d');
+
+    new Chart(registrationCtx, {
+
+        type: 'bar',
+
+        data: {
+            labels: registrationLabels,
+
+            datasets: [{
+                label: 'Number of Students',
+                data: registrationCounts,
+                backgroundColor: '#6575f5',
+                borderColor: '#65d5ff',
+                borderWidth: 1,
+                borderRadius: 8,
+                maxBarThickness: 55
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    },
+                    grid: {
+                        color: 'rgba(255,255,255,0.07)'
+                    }
+                },
+
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
+        }
+
+    });
+
+
+    const attendanceLabels =
+        {{ attendance_labels | tojson }};
+
+    const attendanceCounts =
+        {{ attendance_counts | tojson }};
+
+    const attendanceCtx = document.getElementById(
+        'attendanceChart'
+    ).getContext('2d');
+
+    new Chart(attendanceCtx, {
+
+        type: 'doughnut',
+
+        data: {
+            labels: attendanceLabels,
+
+            datasets: [{
+                data: attendanceCounts,
+
+                backgroundColor: [
+                    '#6575f5',
+                    '#20c997',
+                    '#ffb454',
+                    '#ed6a8a'
+                ],
+
+                borderColor: '#131e3b',
+                borderWidth: 4,
+                hoverOffset: 10
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

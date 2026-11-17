@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile - CampusConnect 360</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 25px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000012;
+        }
+
+        h1, h2 {
+            color: #172554;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #dbeafe;
+        }
+
+        a {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 12px 18px;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <h1>My Student Profile</h1>
+
+        <h3>Student Name: {{ student.name }}</h3>
+        <p>Student ID: {{ student.id }}</p>
+        <p>Email: {{ student.email }}</p>
+    </div>
+
+    <div class="card">
+        <h2>My Attendance Records</h2>
+
+        <table>
+            <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Status</th>
+            </tr>
+
+            {% for record in attendance_records %}
+            <tr>
+                <td>{{ record.title }}</td>
+                <td>{{ record.event_date }}</td>
+                <td>{{ record.location }}</td>
+                <td>{{ record.status }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No attendance records found.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <a href="{{ url_for('home') }}">Back to Home</a>
+
+</div>
+
+</body>
+</html>

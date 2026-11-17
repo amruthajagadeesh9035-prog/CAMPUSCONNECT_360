@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Announcements</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+        }
+
+        header {
+            background: #243b80;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .container {
+            width: 85%;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px #ddd;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #243b80;
+            color: white;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #4169b1;
+        }
+
+        .announcement {
+            border-left: 5px solid #243b80;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <h2>Campus Announcements</h2>
+</header>
+
+<div class="container">
+
+    {% if session.get('admin_id') %}
+
+    <div class="card">
+        <h2>Post New Announcement</h2>
+
+        <form method="POST" action="{{ url_for('add_announcement') }}">
+
+            <input type="text"
+                   name="title"
+                   placeholder="Announcement Title"
+                   required>
+
+            <textarea name="message"
+                      placeholder="Write announcement message"
+                      rows="5"
+                      required></textarea>
+
+            <button type="submit">Publish Announcement</button>
+
+        </form>
+    </div>
+
+    {% endif %}
+
+    <div class="card">
+        <h2>Latest Announcements</h2>
+
+        {% for announcement in announcements %}
+
+        <div class="card announcement">
+            <h3>{{ announcement.title }}</h3>
+            <p>{{ announcement.message }}</p>
+            <small>Published: {{ announcement.created_at }}</small>
+        </div>
+
+        {% else %}
+
+        <p>No announcements available.</p>
+
+        {% endfor %}
+    </div>
+
+    <a href="{{ url_for('admin_dashboard') if session.get('admin_id') else url_for('student_dashboard') }}">
+        ← Back to Dashboard
+    </a>
+
+</div>
+
+</body>
+</html>

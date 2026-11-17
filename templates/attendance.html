@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <p>Student Attendance Portal</p>
+</header>
+
+<nav>
+    <a href="/">Home</a>
+    <a href="/events">Events</a>
+    <a href="/attendance">Attendance</a>
+    <a href="/logout">Logout</a>
+</nav>
+
+<section>
+    <h2>Mark Your Attendance</h2>
+
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    {% for event in events %}
+    <div class="card">
+        <h3>{{ event.title }}</h3>
+        <p>Date: {{ event.event_date }}</p>
+        <p>Location: {{ event.location }}</p>
+
+        <form action="/mark-attendance" method="POST">
+            <input type="hidden" name="event_id" value="{{ event.id }}">
+            <button type="submit" class="btn">Mark Attendance</button>
+        </form>
+    </div>
+    {% else %}
+        <p>No events are available.</p>
+    {% endfor %}
+
+</section>
+
+<footer>
+    <p>© 2026 CAMPUSCONNECT 360</p>
+</footer>
+
+</body>
+</html>
