@@ -1,23 +1,97 @@
 
-from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session
-from database import create_tables, get_db_connection
-from werkzeug.security import generate_password_hash, check_password_hash
+import os
 import sqlite3
+from functools import wraps
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    session
+)
+
+from database import create_tables, get_db_connection
+
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
+
 
 app = Flask(__name__)
-import os
 
+# Flask Secret Key
 app.secret_key = os.environ.get(
     "SECRET_KEY",
     "local-development-only-change-this-key"
 )
 
+# Create database tables
 create_tables()
 
 
-# Admin Access Protection
+# --------------------------------------------------
+# CLOUD ADMIN INITIALIZATION
+# --------------------------------------------------
+
+
+def initialize_admin():
+
+    admin_username = os.environ.get("ADMIN_USERNAME")
+    admin_password = os.environ.get("ADMIN_PASSWORD")
+
+    if not admin_username or not admin_password:
+        print("Admin environment variables are not configured.")
+        return
+
+    if len(admin_password) < 8:
+        print("Admin password must contain at least 8 characters.")
+        return
+
+    conn = get_db_connection()
+
+    try:
+        hashed_password = generate_password_hash(admin_password)
+
+        existing_admin = conn.execute(
+            "SELECT id FROM admins WHERE username = ?",
+            (admin_username,)
+        ).fetchone()
+
+        if existing_admin is None:
+            conn.execute(
+                """INSERT INTO admins (username, password)
+                   VALUES (?, ?)""",
+                (admin_username, hashed_password)
+            )
+            print("Cloud admin account created successfully!")
+
+        else:
+            conn.execute(
+                """UPDATE admins
+                   SET password = ?
+                   WHERE username = ?""",
+                (hashed_password, admin_username)
+            )
+            print("Cloud admin password updated successfully!")
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+
+initialize_admin()
+
+# --------------------------------------------------
+# ADMIN ACCESS PROTECTION
+# --------------------------------------------------
+
 def admin_required(route_function):
+
     @wraps(route_function)
     def wrapper(*args, **kwargs):
 
@@ -30,21 +104,32 @@ def admin_required(route_function):
     return wrapper
 
 
-# Home Page
+# --------------------------------------------------
+# HOME PAGE
+# --------------------------------------------------
+
 @app.route("/")
 def home():
+
     return render_template("index.html")
 
 
-# Student Registration
+# --------------------------------------------------
+# STUDENT REGISTRATION
+# --------------------------------------------------
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
     if request.method == "POST":
 
-        name = request.form["name"]
-        email = request.form["email"]
+        name = request.form["name"].strip()
+        email = request.form["email"].strip()
         password = request.form["password"]
+
+        if not name or not email:
+            flash("Please enter your name and email.")
+            return redirect(url_for("register"))
 
         if len(password) < 8:
             flash("Password must contain at least 8 characters.")
@@ -55,6 +140,7 @@ def register():
         conn = get_db_connection()
 
         try:
+
             conn.execute(
                 """INSERT INTO students
                    (name, email, password, registered_at)
@@ -65,9 +151,11 @@ def register():
             conn.commit()
 
             flash("Registration successful! Please login.")
+
             return redirect(url_for("login"))
 
         except sqlite3.IntegrityError:
+
             flash("This email is already registered.")
 
         finally:
@@ -76,13 +164,16 @@ def register():
     return render_template("register.html")
 
 
-# Student Login
+# --------------------------------------------------
+# STUDENT LOGIN
+# --------------------------------------------------
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
 
-        email = request.form["email"]
+        email = request.form["email"].strip()
         password = request.form["password"]
 
         conn = get_db_connection()
@@ -99,6 +190,7 @@ def login():
         ):
 
             session.clear()
+
             session["student_id"] = student["id"]
             session["student_name"] = student["name"]
 
@@ -111,7 +203,10 @@ def login():
     return render_template("login.html")
 
 
-# Admin Add Event
+# --------------------------------------------------
+# ADMIN ADD EVENT
+# --------------------------------------------------
+
 @app.route("/add-event", methods=["GET", "POST"])
 @admin_required
 def add_event():
@@ -142,7 +237,10 @@ def add_event():
     return render_template("add_event.html")
 
 
-# View Campus Events
+# --------------------------------------------------
+# VIEW CAMPUS EVENTS
+# --------------------------------------------------
+
 @app.route("/events")
 def events():
 
@@ -160,7 +258,10 @@ def events():
     )
 
 
-# Student Attendance Page
+# --------------------------------------------------
+# STUDENT ATTENDANCE PAGE
+# --------------------------------------------------
+
 @app.route("/attendance")
 def attendance():
 
@@ -182,7 +283,10 @@ def attendance():
     )
 
 
-# Delete Event
+# --------------------------------------------------
+# DELETE EVENT
+# --------------------------------------------------
+
 @app.route("/delete-event/<int:event_id>", methods=["POST"])
 @admin_required
 def delete_event(event_id):
@@ -212,7 +316,10 @@ def delete_event(event_id):
     return redirect(url_for("events"))
 
 
-# Mark Attendance
+# --------------------------------------------------
+# MARK ATTENDANCE
+# --------------------------------------------------
+
 @app.route("/mark-attendance", methods=["POST"])
 def mark_attendance():
 
@@ -239,9 +346,11 @@ def mark_attendance():
         ).fetchone()
 
         if existing:
+
             flash("You have already marked attendance for this event.")
 
         else:
+
             conn.execute(
                 """INSERT INTO attendance
                    (student_id, event_id, status)
@@ -250,9 +359,11 @@ def mark_attendance():
             )
 
             conn.commit()
+
             flash("Attendance marked successfully!")
 
     else:
+
         flash("Invalid event.")
 
     conn.close()
@@ -260,7 +371,10 @@ def mark_attendance():
     return redirect(url_for("attendance"))
 
 
-# Admin Attendance Report
+# --------------------------------------------------
+# ADMIN ATTENDANCE REPORT
+# --------------------------------------------------
+
 @app.route("/admin-attendance")
 @admin_required
 def admin_attendance():
@@ -284,7 +398,10 @@ def admin_attendance():
     )
 
 
-# Student Certificate Page
+# --------------------------------------------------
+# STUDENT CERTIFICATE PAGE
+# --------------------------------------------------
+
 @app.route("/certificates")
 def certificates():
 
@@ -318,7 +435,10 @@ def certificates():
     )
 
 
-# Admin Dashboard
+# --------------------------------------------------
+# ADMIN DASHBOARD
+# --------------------------------------------------
+
 @app.route("/admin-dashboard")
 @admin_required
 def admin_dashboard():
@@ -341,7 +461,6 @@ def admin_dashboard():
         "SELECT COUNT(*) FROM attendance WHERE status = 'Present'"
     ).fetchone()[0]
 
-    # Recent students (registered_at is needed by the dashboard table)
     recent_students = conn.execute(
         """SELECT id, name, email, registered_at
            FROM students
@@ -349,7 +468,6 @@ def admin_dashboard():
            LIMIT 5"""
     ).fetchall()
 
-    # Upcoming campus events
     upcoming_events = conn.execute(
         """SELECT * FROM events
            WHERE event_date >= date('now')
@@ -357,7 +475,6 @@ def admin_dashboard():
            LIMIT 5"""
     ).fetchall()
 
-    # Monthly student registration analytics
     registration_data = conn.execute("""
         SELECT
             strftime('%Y-%m', registered_at) AS month,
@@ -376,7 +493,6 @@ def admin_dashboard():
         row["total"] for row in registration_data
     ]
 
-    # Attendance analytics
     attendance_data = conn.execute("""
         SELECT status, COUNT(*) AS total
         FROM attendance
@@ -389,15 +505,16 @@ def admin_dashboard():
     }
 
     for row in attendance_data:
+
         if row["status"] in attendance_status_counts:
             attendance_status_counts[row["status"]] = row["total"]
 
     attendance_labels = list(attendance_status_counts.keys())
     attendance_counts = list(attendance_status_counts.values())
 
-    # Names expected by the updated admin_dashboard.html
     student_months = registration_labels
     student_counts = registration_counts
+
     present_count = attendance_status_counts["Present"]
     absent_count = attendance_status_counts["Absent"]
 
@@ -411,14 +528,10 @@ def admin_dashboard():
         total_certificates=total_certificates,
         recent_students=recent_students,
         upcoming_events=upcoming_events,
-
-        # New dashboard chart variables
         student_months=student_months,
         student_counts=student_counts,
         present_count=present_count,
         absent_count=absent_count,
-
-        # Keep the earlier variable names too, for compatibility
         registration_labels=registration_labels,
         registration_counts=registration_counts,
         attendance_labels=attendance_labels,
@@ -426,7 +539,10 @@ def admin_dashboard():
     )
 
 
-# Admin Student Management
+# --------------------------------------------------
+# ADMIN STUDENT MANAGEMENT
+# --------------------------------------------------
+
 @app.route("/admin-students")
 @admin_required
 def admin_students():
@@ -445,13 +561,16 @@ def admin_students():
     )
 
 
-# Admin Login
+# --------------------------------------------------
+# ADMIN LOGIN
+# --------------------------------------------------
+
 @app.route("/admin-login", methods=["GET", "POST"])
 def admin_login():
 
     if request.method == "POST":
 
-        username = request.form["username"]
+        username = request.form["username"].strip()
         password = request.form["password"]
 
         conn = get_db_connection()
@@ -468,6 +587,7 @@ def admin_login():
         ):
 
             session.clear()
+
             session["admin_id"] = admin["id"]
             session["admin_username"] = admin["username"]
 
@@ -480,7 +600,10 @@ def admin_login():
     return render_template("admin_login.html")
 
 
-# Admin Logout
+# --------------------------------------------------
+# ADMIN LOGOUT
+# --------------------------------------------------
+
 @app.route("/admin-logout")
 def admin_logout():
 
@@ -491,7 +614,10 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
-# Student Logout
+# --------------------------------------------------
+# STUDENT LOGOUT
+# --------------------------------------------------
+
 @app.route("/logout")
 def logout():
 
@@ -502,7 +628,10 @@ def logout():
     return redirect(url_for("home"))
 
 
-# Student Profile
+# --------------------------------------------------
+# STUDENT PROFILE
+# --------------------------------------------------
+
 @app.route("/student-profile")
 def student_profile():
 
@@ -536,7 +665,10 @@ def student_profile():
     )
 
 
-# Student Dashboard
+# --------------------------------------------------
+# STUDENT DASHBOARD
+# --------------------------------------------------
+
 @app.route("/student-dashboard")
 def student_dashboard():
 
@@ -554,8 +686,11 @@ def student_dashboard():
     conn.close()
 
     if student is None:
+
         session.clear()
+
         flash("Student account not found. Please login again.")
+
         return redirect(url_for("login"))
 
     return render_template(
@@ -564,7 +699,10 @@ def student_dashboard():
     )
 
 
-# Event Registration Page
+# --------------------------------------------------
+# EVENT REGISTRATION PAGE
+# --------------------------------------------------
+
 @app.route("/event-registration")
 def event_registration():
 
@@ -598,7 +736,10 @@ def event_registration():
     )
 
 
-# Register for an Event
+# --------------------------------------------------
+# REGISTER FOR AN EVENT
+# --------------------------------------------------
+
 @app.route("/register-event/<int:event_id>", methods=["POST"])
 def register_event(event_id):
 
@@ -618,6 +759,7 @@ def register_event(event_id):
         ).fetchone()
 
         if event is None:
+
             flash("Event not found.")
 
         else:
@@ -629,11 +771,11 @@ def register_event(event_id):
             ).fetchone()
 
             if existing:
+
                 flash("You are already registered for this event.")
 
             else:
 
-                # Save Event Registration
                 conn.execute(
                     """INSERT INTO event_registrations
                        (student_id, event_id)
@@ -641,7 +783,6 @@ def register_event(event_id):
                     (student_id, event_id)
                 )
 
-                # Save Private Student Notification
                 conn.execute(
                     """INSERT INTO notifications
                        (student_id, title, message)
@@ -664,7 +805,10 @@ def register_event(event_id):
     return redirect(url_for("event_registration"))
 
 
-# View Announcements
+# --------------------------------------------------
+# VIEW ANNOUNCEMENTS
+# --------------------------------------------------
+
 @app.route("/announcements")
 def announcements():
 
@@ -686,7 +830,10 @@ def announcements():
     )
 
 
-# Add Announcement (Admin Only)
+# --------------------------------------------------
+# ADD ANNOUNCEMENT
+# --------------------------------------------------
+
 @app.route("/add-announcement", methods=["POST"])
 @admin_required
 def add_announcement():
@@ -710,7 +857,10 @@ def add_announcement():
     return redirect(url_for("announcements"))
 
 
-# Student Feedback Page
+# --------------------------------------------------
+# STUDENT FEEDBACK PAGE
+# --------------------------------------------------
+
 @app.route("/feedback")
 def feedback():
 
@@ -732,7 +882,10 @@ def feedback():
     )
 
 
-# Submit Student Feedback
+# --------------------------------------------------
+# SUBMIT STUDENT FEEDBACK
+# --------------------------------------------------
+
 @app.route("/submit-feedback", methods=["POST"])
 def submit_feedback():
 
@@ -742,33 +895,47 @@ def submit_feedback():
 
     event_id = request.form.get("event_id")
     rating = request.form.get("rating")
-    feedback_text = request.form.get("feedback_text", "").strip()
+    feedback_text = request.form.get(
+        "feedback_text", ""
+    ).strip()
 
     if not feedback_text or not rating:
+
         flash("Please complete all required fields.")
+
         return redirect(url_for("feedback"))
 
     try:
+
         rating = int(rating)
+
     except ValueError:
+
         flash("Invalid rating.")
+
         return redirect(url_for("feedback"))
 
     if rating not in range(1, 6):
+
         flash("Rating must be between 1 and 5.")
+
         return redirect(url_for("feedback"))
 
     conn = get_db_connection()
 
     if event_id:
+
         event = conn.execute(
             "SELECT id FROM events WHERE id = ?",
             (event_id,)
         ).fetchone()
 
         if event is None:
+
             conn.close()
+
             flash("Invalid event selected.")
+
             return redirect(url_for("feedback"))
 
     conn.execute(
@@ -791,7 +958,10 @@ def submit_feedback():
     return redirect(url_for("feedback"))
 
 
-# Admin Feedback Management
+# --------------------------------------------------
+# ADMIN FEEDBACK MANAGEMENT
+# --------------------------------------------------
+
 @app.route("/admin-feedback")
 @admin_required
 def admin_feedback():
@@ -823,7 +993,10 @@ def admin_feedback():
     )
 
 
-# Admin Notifications Page
+# --------------------------------------------------
+# ADMIN NOTIFICATIONS PAGE
+# --------------------------------------------------
+
 @app.route("/admin-notifications")
 @admin_required
 def admin_notifications():
@@ -831,7 +1004,10 @@ def admin_notifications():
     return render_template("admin_notifications.html")
 
 
-# Send Notification to All Students
+# --------------------------------------------------
+# SEND NOTIFICATION TO ALL STUDENTS
+# --------------------------------------------------
+
 @app.route("/send-notification", methods=["POST"])
 @admin_required
 def send_notification():
@@ -840,7 +1016,9 @@ def send_notification():
     message = request.form.get("message", "").strip()
 
     if not title or not message:
+
         flash("Please enter both title and message.")
+
         return redirect(url_for("admin_notifications"))
 
     conn = get_db_connection()
@@ -870,7 +1048,10 @@ def send_notification():
     return redirect(url_for("admin_notifications"))
 
 
-# Student Notifications Page
+# --------------------------------------------------
+# STUDENT NOTIFICATIONS PAGE
+# --------------------------------------------------
+
 @app.route("/notifications")
 def notifications():
 
@@ -893,6 +1074,12 @@ def notifications():
         "notifications.html",
         notifications=all_notifications
     )
+
+
+# --------------------------------------------------
+# MY EVENT REGISTRATIONS
+# --------------------------------------------------
+
 @app.route("/my-registrations")
 def my_registrations():
 
@@ -906,7 +1093,7 @@ def my_registrations():
         SELECT events.*
         FROM event_registrations
         JOIN events
-        ON event_registrations.event_id = events.id
+            ON event_registrations.event_id = events.id
         WHERE event_registrations.student_id = ?
         ORDER BY events.event_date ASC
     """, (session["student_id"],)).fetchall()
@@ -917,6 +1104,12 @@ def my_registrations():
         "my_registrations.html",
         registrations=registrations
     )
+
+
+# --------------------------------------------------
+# ADMIN EVENT REGISTRATIONS
+# --------------------------------------------------
+
 @app.route("/admin-event-registrations")
 @admin_required
 def admin_event_registrations():
@@ -945,5 +1138,10 @@ def admin_event_registrations():
         registrations=registrations
     )
 
+
+# --------------------------------------------------
+# APPLICATION START
+# --------------------------------------------------
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
