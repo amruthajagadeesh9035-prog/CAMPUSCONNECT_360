@@ -6,7 +6,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "campusconnect_secret_key_2026"
+import os
+
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "local-development-only-change-this-key"
+)
 
 create_tables()
 
