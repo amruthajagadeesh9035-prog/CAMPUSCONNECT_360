@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Achievements | CAMPUSCONNECT 360</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .badge-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .badge-card {
+            padding: 25px;
+            text-align: center;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+        }
+
+        .badge-icon {
+            font-size: 45px;
+        }
+
+        .locked {
+            opacity: 0.5;
+        }
+
+        .unlocked-text {
+            color: green;
+            font-weight: bold;
+        }
+
+        .locked-text {
+            color: #777;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <p>Student Achievement Center</p>
+</header>
+
+<nav>
+    <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('attendance') }}">Attendance</a>
+    <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</nav>
+
+<section>
+
+    <h2>My Achievements</h2>
+
+    <div class="card">
+        <h3>Your Participation</h3>
+        <p>
+            Events Attended:
+            <strong>{{ attended_count }}</strong>
+        </p>
+
+        {% if next_badge %}
+            <p>
+                Next badge:
+                <strong>{{ next_badge.title }}</strong>
+            </p>
+
+            <p>
+                Attend
+                {{ next_badge.required - attended_count }}
+                more event(s) to unlock it.
+            </p>
+        {% else %}
+            <p>Congratulations! You have unlocked all badges!</p>
+        {% endif %}
+    </div>
+
+    <div class="badge-container">
+
+        {% for badge in badges %}
+
+        <div class="badge-card {% if not badge.unlocked %}locked{% endif %}">
+
+            <div class="badge-icon">
+                {{ badge.icon }}
+            </div>
+
+            <h3>{{ badge.title }}</h3>
+
+            <p>{{ badge.description }}</p>
+
+            <p>Required: {{ badge.required }} events</p>
+
+            {% if badge.unlocked %}
+                <p class="unlocked-text">✓ Unlocked</p>
+            {% else %}
+                <p class="locked-text">🔒 Locked</p>
+            {% endif %}
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+<footer>
+    <p>© 2026 CAMPUSCONNECT 360</p>
+</footer>
+
+</body>
+</html>

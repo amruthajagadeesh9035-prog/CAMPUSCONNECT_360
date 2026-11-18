@@ -1,0 +1,524 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Leaderboard | CAMPUSCONNECT 360</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6fb;
+            color: #20243a;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 20px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        header h2 {
+            font-size: 22px;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            background: #2563eb;
+            padding: 10px 18px;
+            border-radius: 7px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 35px auto;
+        }
+
+        .hero {
+            background: linear-gradient(120deg, #1e3a8a, #4f46e5);
+            color: white;
+            padding: 40px 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            line-height: 1.6;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card p {
+            font-size: 27px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            color: #172554;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .rank {
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .points {
+            font-weight: bold;
+            color: #15803d;
+        }
+
+        .top-three {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .podium-card {
+            background: #eff6ff;
+            text-align: center;
+            padding: 25px 15px;
+            border-radius: 12px;
+        }
+
+        .podium-card h3 {
+            margin: 12px 0;
+        }
+
+        .medal {
+            font-size: 35px;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-box {
+            min-width: 0;
+            height: 320px;
+            padding: 15px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+
+        footer {
+            background: #172554;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        @media(max-width: 600px) {
+            .hero h1 {
+                font-size: 25px;
+            }
+
+            .section {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>GDG CAMPUSCONNECT 360</h2>
+    <a href="{{ url_for('home') }}">Back to Home</a>
+</header>
+
+<div class="container">
+
+    <div class="hero">
+        <h1>🏆 Student Leaderboard</h1>
+        <p>
+            Recognizing student participation, achievements
+            and engagement in campus events.
+        </p>
+    </div>
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <h3>Total Students</h3>
+            <p>{{ total_students }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Events</h3>
+            <p>{{ total_events }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Event Registrations</h3>
+            <p>{{ total_registrations }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Present Attendance</h3>
+            <p>{{ total_attendance }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Student Points</h3>
+            <p>{{ total_points }}</p>
+        </div>
+
+    </div>
+
+
+    <div class="section">
+        <h2>🥇 Top Three Students</h2>
+
+        {% if students %}
+
+        <div class="top-three">
+
+            {% for student in students[:3] %}
+
+            <div class="podium-card">
+
+                <div class="medal">
+                    {% if loop.index == 1 %}
+                        🥇
+                    {% elif loop.index == 2 %}
+                        🥈
+                    {% else %}
+                        🥉
+                    {% endif %}
+                </div>
+
+                <h3>{{ student["student_name"] }}</h3>
+
+                <p>Rank #{{ loop.index }}</p>
+
+                <p class="points">
+                    {{ student["points"] }} Points
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty">
+            No students are available in the leaderboard yet.
+        </div>
+
+        {% endif %}
+    </div>
+
+
+    <div class="section">
+        <h2>🏅 Student Rankings</h2>
+
+        {% if students %}
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Student Name</th>
+                        <th>Student ID</th>
+                        <th>Events Registered</th>
+                        <th>Events Attended</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for student in students %}
+
+                    <tr>
+                        <td class="rank">#{{ loop.index }}</td>
+
+                        <td>{{ student["student_name"] }}</td>
+
+                        <td>{{ student["student_id"] }}</td>
+
+                        <td>{{ student["events_registered"] }}</td>
+
+                        <td>{{ student["events_joined"] }}</td>
+
+                        <td class="points">
+                            {{ student["points"] }}
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="empty">
+            No leaderboard records found. Students must register
+            for events to appear here.
+        </div>
+
+        {% endif %}
+    </div>
+
+
+    <div class="section">
+        <h2>📊 Student Participation Analytics</h2>
+
+        {% if students %}
+
+        <div class="charts">
+
+            <div class="chart-box">
+                <canvas id="studentChart"></canvas>
+            </div>
+
+            <div class="chart-box">
+                <canvas id="pointsChart"></canvas>
+            </div>
+
+        </div>
+
+        {% else %}
+
+        <div class="empty">
+            Charts will appear when students participate in events.
+        </div>
+
+        {% endif %}
+    </div>
+
+
+    <div class="section">
+        <h2>📅 Monthly Event Registrations</h2>
+
+        <div class="chart-box">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <h2>🎯 Event-wise Registrations</h2>
+
+        <div class="chart-box">
+            <canvas id="eventChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+
+<footer>
+    <p>© 2026 GDG CAMPUSCONNECT 360 | CODESTORM 2026</p>
+</footer>
+
+
+<script>
+
+    const studentLabels = {{ chart_labels | tojson }};
+    const studentPoints = {{ chart_points | tojson }};
+
+    const monthlyLabels = {{ monthly_labels | tojson }};
+    const monthlyCounts = {{ monthly_counts | tojson }};
+
+    const eventLabels = {{ event_labels | tojson }};
+    const eventCounts = {{ event_counts | tojson }};
+
+
+    if (studentLabels.length > 0) {
+
+        new Chart(document.getElementById("studentChart"), {
+            type: "bar",
+
+            data: {
+                labels: studentLabels,
+
+                datasets: [{
+                    label: "Student Points",
+                    data: studentPoints,
+                    backgroundColor: "#3b82f6"
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: "Student Participation Points"
+                    }
+                }
+            }
+        });
+
+
+        new Chart(document.getElementById("pointsChart"), {
+            type: "doughnut",
+
+            data: {
+                labels: studentLabels,
+
+                datasets: [{
+                    label: "Points",
+                    data: studentPoints,
+                    backgroundColor: [
+                        "#2563eb",
+                        "#16a34a",
+                        "#f59e0b",
+                        "#9333ea",
+                        "#ec4899",
+                        "#0891b2"
+                    ]
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: "Student Points Distribution"
+                    }
+                }
+            }
+        });
+
+    }
+
+
+    new Chart(document.getElementById("monthlyChart"), {
+        type: "line",
+
+        data: {
+            labels: monthlyLabels,
+
+            datasets: [{
+                label: "Registrations",
+                data: monthlyCounts,
+                borderColor: "#2563eb",
+                backgroundColor: "rgba(37, 99, 235, 0.15)",
+                fill: true,
+                tension: 0.3
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+
+    new Chart(document.getElementById("eventChart"), {
+        type: "bar",
+
+        data: {
+            labels: eventLabels,
+
+            datasets: [{
+                label: "Registrations",
+                data: eventCounts,
+                backgroundColor: "#16a34a"
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+</script>
+
+</body>
+</html>

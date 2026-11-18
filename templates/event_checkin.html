@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Attendance</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <p>QR Attendance Confirmation</p>
+</header>
+
+<section class="card">
+
+    <h2>{{ event.title }}</h2>
+
+    <p><strong>Date:</strong> {{ event.event_date }}</p>
+    <p><strong>Location:</strong> {{ event.location }}</p>
+
+    {% if already_marked %}
+
+        <h3>Attendance Already Recorded!</h3>
+        <p>Your attendance for this event has already been confirmed.</p>
+
+    {% else %}
+
+        <p>Confirm your attendance for this event.</p>
+
+        <form method="POST">
+            <button type="submit" class="btn">
+                Confirm Attendance
+            </button>
+        </form>
+
+    {% endif %}
+
+    <p>
+        <a href="{{ url_for('student_dashboard') }}">
+            Back to Student Dashboard
+        </a>
+    </p>
+
+</section>
+
+<footer>
+    <p>© 2026 CAMPUSCONNECT 360</p>
+</footer>
+
+</body>
+</html>

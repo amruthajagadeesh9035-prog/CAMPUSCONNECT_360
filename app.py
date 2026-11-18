@@ -1,7 +1,11 @@
 
 import os
+import io
 import sqlite3
+import secrets
 from functools import wraps
+
+import qrcode
 
 from flask import (
     Flask,
@@ -10,7 +14,8 @@ from flask import (
     redirect,
     url_for,
     flash,
-    session
+    session,
+    send_file
 )
 
 from database import create_tables, get_db_connection
@@ -23,7 +28,6 @@ from werkzeug.security import (
 
 app = Flask(__name__)
 
-# Flask Secret Key
 app.secret_key = os.environ.get(
     "SECRET_KEY",
     "local-development-only-change-this-key"
@@ -36,7 +40,6 @@ create_tables()
 # --------------------------------------------------
 # CLOUD ADMIN INITIALIZATION
 # --------------------------------------------------
-
 
 def initialize_admin():
 
@@ -62,20 +65,24 @@ def initialize_admin():
         ).fetchone()
 
         if existing_admin is None:
+
             conn.execute(
                 """INSERT INTO admins (username, password)
                    VALUES (?, ?)""",
                 (admin_username, hashed_password)
             )
+
             print("Cloud admin account created successfully!")
 
         else:
+
             conn.execute(
                 """UPDATE admins
                    SET password = ?
                    WHERE username = ?""",
                 (hashed_password, admin_username)
             )
+
             print("Cloud admin password updated successfully!")
 
         conn.commit()
@@ -85,6 +92,7 @@ def initialize_admin():
 
 
 initialize_admin()
+
 
 # --------------------------------------------------
 # ADMIN ACCESS PROTECTION
@@ -218,19 +226,33 @@ def add_event():
         event_date = request.form["event_date"]
         location = request.form["location"]
 
+        # Generate a unique QR attendance token
+        attendance_token = secrets.token_urlsafe(32)
+
         conn = get_db_connection()
 
-        conn.execute(
-            """INSERT INTO events
-               (title, description, event_date, location)
-               VALUES (?, ?, ?, ?)""",
-            (title, description, event_date, location)
-        )
+        try:
 
-        conn.commit()
-        conn.close()
+            conn.execute(
+                """INSERT INTO events
+                   (title, description, event_date, location,
+                    attendance_token)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (
+                    title,
+                    description,
+                    event_date,
+                    location,
+                    attendance_token
+                )
+            )
 
-        flash("Event added successfully!")
+            conn.commit()
+
+        finally:
+            conn.close()
+
+        flash("Event added successfully with QR code!")
 
         return redirect(url_for("events"))
 
@@ -259,6 +281,324 @@ def events():
 
 
 # --------------------------------------------------
+# ADMIN EVENT QR CODE PAGE
+# --------------------------------------------------
+
+@app.route("/admin-event-qr/<int:event_id>")
+@admin_required
+def admin_event_qr(event_id):
+
+    conn = get_db_connection()
+
+    event = conn.execute(
+        "SELECT * FROM events WHERE id = ?",
+        (event_id,)
+    ).fetchone()
+
+    conn.close()
+
+    if event is None:
+
+        flash("Event not found.")
+        return redirect(url_for("events"))
+
+    if not event["attendance_token"]:
+
+        return "QR token is missing for this event.", 400
+
+    # Generate the student check-in URL
+    qr_url = url_for(
+        "event_checkin",
+        token=event["attendance_token"],
+        _external=True
+    )
+
+    return render_template(
+        "event_qr.html",
+        event=event,
+        qr_url=qr_url
+    )
+
+
+# --------------------------------------------------
+# GENERATE QR CODE IMAGE
+# --------------------------------------------------
+
+@app.route("/event-qr-image/<int:event_id>")
+@admin_required
+def event_qr_image(event_id):
+
+    conn = get_db_connection()
+
+    event = conn.execute(
+        "SELECT * FROM events WHERE id = ?",
+        (event_id,)
+    ).fetchone()
+
+    conn.close()
+
+    if event is None:
+        return "Event not found.", 404
+
+    if not event["attendance_token"]:
+        return "QR token is missing.", 400
+
+    qr_url = url_for(
+        "event_checkin",
+        token=event["attendance_token"],
+        _external=True
+    )
+
+    # Generate QR image
+    qr = qrcode.make(qr_url)
+
+    image_buffer = io.BytesIO()
+
+    qr.save(image_buffer, format="PNG")
+
+    image_buffer.seek(0)
+
+    return send_file(
+        image_buffer,
+        mimetype="image/png"
+    )
+
+
+# --------------------------------------------------
+# STUDENT EVENT QR CHECK-IN
+# --------------------------------------------------
+
+@app.route("/event-checkin/<token>", methods=["GET", "POST"])
+def event_checkin(token):
+
+    if "student_id" not in session:
+
+        flash("Please login before checking in.")
+
+        return redirect(url_for("login"))
+
+    student_id = session["student_id"]
+
+    conn = get_db_connection()
+
+    try:
+
+        event = conn.execute(
+            """SELECT * FROM events
+               WHERE attendance_token = ?""",
+            (token,)
+        ).fetchone()
+
+        if event is None:
+            return "Invalid event QR code.", 404
+
+        # Check student event registration
+        registration = conn.execute(
+            """SELECT id FROM event_registrations
+               WHERE student_id = ?
+               AND event_id = ?""",
+            (student_id, event["id"])
+        ).fetchone()
+
+        if registration is None:
+            return (
+                "Please register for this event before checking in.",
+                403
+            )
+
+        # Check existing attendance
+        existing = conn.execute(
+            """SELECT id FROM attendance
+               WHERE student_id = ?
+               AND event_id = ?""",
+            (student_id, event["id"])
+        ).fetchone()
+
+        if request.method == "POST":
+
+            if existing:
+
+                flash("Attendance has already been recorded.")
+
+            else:
+
+                conn.execute(
+                    """INSERT INTO attendance
+                       (student_id, event_id, status)
+                       VALUES (?, ?, 'Present')""",
+                    (student_id, event["id"])
+                )
+
+                conn.commit()
+
+                flash("Your event attendance has been recorded!")
+
+            return redirect(url_for("achievements"))
+
+        return render_template(
+            "event_checkin.html",
+            event=event,
+            already_marked=existing is not None
+        )
+
+    finally:
+        conn.close()
+
+
+# --------------------------------------------------
+# STUDENT LEADERBOARD AND ANALYTICS
+# --------------------------------------------------
+
+@app.route("/leaderboard")
+def leaderboard():
+
+    conn = get_db_connection()
+
+    try:
+
+        students = conn.execute("""
+            SELECT
+                students.id AS student_id,
+                students.name AS student_name,
+
+                COUNT(DISTINCT event_registrations.event_id)
+                    AS events_registered,
+
+                COUNT(DISTINCT CASE
+                    WHEN attendance.status = 'Present'
+                    THEN attendance.event_id
+                END) AS events_joined,
+
+                (
+                    COUNT(DISTINCT event_registrations.event_id) * 5
+                    +
+                    COUNT(DISTINCT CASE
+                        WHEN attendance.status = 'Present'
+                        THEN attendance.event_id
+                    END) * 10
+                ) AS points
+
+            FROM students
+
+            LEFT JOIN event_registrations
+                ON students.id = event_registrations.student_id
+
+            LEFT JOIN attendance
+                ON students.id = attendance.student_id
+
+            GROUP BY students.id, students.name
+
+            ORDER BY points DESC,
+                     events_joined DESC,
+                     students.name ASC
+
+        """).fetchall()
+
+        total_students = conn.execute(
+            "SELECT COUNT(*) FROM students"
+        ).fetchone()[0]
+
+        total_events = conn.execute(
+            "SELECT COUNT(*) FROM events"
+        ).fetchone()[0]
+
+        total_registrations = conn.execute(
+            "SELECT COUNT(*) FROM event_registrations"
+        ).fetchone()[0]
+
+        total_attendance = conn.execute("""
+            SELECT COUNT(*)
+            FROM attendance
+            WHERE status = 'Present'
+        """).fetchone()[0]
+
+        total_points = sum(
+            student["points"] for student in students
+        )
+
+        top_student = students[0] if students else None
+
+        chart_labels = [
+            student["student_name"] for student in students
+        ]
+
+        chart_points = [
+            student["points"] for student in students
+        ]
+
+        monthly_data = conn.execute("""
+            SELECT
+                strftime('%Y-%m', registration_date) AS month,
+                COUNT(*) AS total
+
+            FROM event_registrations
+
+            WHERE registration_date IS NOT NULL
+
+            GROUP BY month
+
+            ORDER BY month ASC
+        """).fetchall()
+
+        monthly_labels = [
+            row["month"] for row in monthly_data
+        ]
+
+        monthly_counts = [
+            row["total"] for row in monthly_data
+        ]
+
+        event_data = conn.execute("""
+            SELECT
+                events.title AS event_name,
+                COUNT(event_registrations.id) AS total
+
+            FROM events
+
+            LEFT JOIN event_registrations
+                ON events.id = event_registrations.event_id
+
+            GROUP BY events.id, events.title
+
+            ORDER BY total DESC
+        """).fetchall()
+
+        event_labels = [
+            row["event_name"] for row in event_data
+        ]
+
+        event_counts = [
+            row["total"] for row in event_data
+        ]
+
+        return render_template(
+            "leaderboard.html",
+
+            students=students,
+
+            total_students=total_students,
+            total_events=total_events,
+            total_registrations=total_registrations,
+            total_attendance=total_attendance,
+            total_points=total_points,
+
+            top_student=top_student,
+
+            chart_labels=chart_labels,
+            chart_points=chart_points,
+
+            monthly_labels=monthly_labels,
+            monthly_counts=monthly_counts,
+
+            event_labels=event_labels,
+            event_counts=event_counts
+        )
+
+    finally:
+        conn.close()
+
+
+# --------------------------------------------------
 # STUDENT ATTENDANCE PAGE
 # --------------------------------------------------
 
@@ -266,7 +606,9 @@ def events():
 def attendance():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
@@ -293,23 +635,27 @@ def delete_event(event_id):
 
     conn = get_db_connection()
 
-    conn.execute(
-        "DELETE FROM attendance WHERE event_id = ?",
-        (event_id,)
-    )
+    try:
 
-    conn.execute(
-        "DELETE FROM event_registrations WHERE event_id = ?",
-        (event_id,)
-    )
+        conn.execute(
+            "DELETE FROM attendance WHERE event_id = ?",
+            (event_id,)
+        )
 
-    conn.execute(
-        "DELETE FROM events WHERE id = ?",
-        (event_id,)
-    )
+        conn.execute(
+            "DELETE FROM event_registrations WHERE event_id = ?",
+            (event_id,)
+        )
 
-    conn.commit()
-    conn.close()
+        conn.execute(
+            "DELETE FROM events WHERE id = ?",
+            (event_id,)
+        )
+
+        conn.commit()
+
+    finally:
+        conn.close()
 
     flash("Event deleted successfully!")
 
@@ -317,14 +663,16 @@ def delete_event(event_id):
 
 
 # --------------------------------------------------
-# MARK ATTENDANCE
+# MANUAL MARK ATTENDANCE
 # --------------------------------------------------
 
 @app.route("/mark-attendance", methods=["POST"])
 def mark_attendance():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     student_id = session["student_id"]
@@ -332,41 +680,45 @@ def mark_attendance():
 
     conn = get_db_connection()
 
-    event = conn.execute(
-        "SELECT id FROM events WHERE id = ?",
-        (event_id,)
-    ).fetchone()
+    try:
 
-    if event:
-
-        existing = conn.execute(
-            """SELECT id FROM attendance
-               WHERE student_id = ? AND event_id = ?""",
-            (student_id, event_id)
+        event = conn.execute(
+            "SELECT id FROM events WHERE id = ?",
+            (event_id,)
         ).fetchone()
 
-        if existing:
+        if event:
 
-            flash("You have already marked attendance for this event.")
+            existing = conn.execute(
+                """SELECT id FROM attendance
+                   WHERE student_id = ?
+                   AND event_id = ?""",
+                (student_id, event_id)
+            ).fetchone()
+
+            if existing:
+
+                flash("You have already marked attendance for this event.")
+
+            else:
+
+                conn.execute(
+                    """INSERT INTO attendance
+                       (student_id, event_id, status)
+                       VALUES (?, ?, 'Present')""",
+                    (student_id, event_id)
+                )
+
+                conn.commit()
+
+                flash("Attendance marked successfully!")
 
         else:
 
-            conn.execute(
-                """INSERT INTO attendance
-                   (student_id, event_id, status)
-                   VALUES (?, ?, 'Present')""",
-                (student_id, event_id)
-            )
+            flash("Invalid event.")
 
-            conn.commit()
-
-            flash("Attendance marked successfully!")
-
-    else:
-
-        flash("Invalid event.")
-
-    conn.close()
+    finally:
+        conn.close()
 
     return redirect(url_for("attendance"))
 
@@ -382,12 +734,22 @@ def admin_attendance():
     conn = get_db_connection()
 
     records = conn.execute("""
-        SELECT students.name, students.email,
-               events.title, attendance.status
+        SELECT
+            students.name,
+            students.email,
+            events.title,
+            attendance.status
+
         FROM attendance
-        JOIN students ON attendance.student_id = students.id
-        JOIN events ON attendance.event_id = events.id
+
+        JOIN students
+            ON attendance.student_id = students.id
+
+        JOIN events
+            ON attendance.event_id = events.id
+
         ORDER BY events.event_date DESC
+
     """).fetchall()
 
     conn.close()
@@ -406,7 +768,9 @@ def admin_attendance():
 def certificates():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
@@ -417,14 +781,20 @@ def certificates():
             events.title,
             events.event_date,
             'C360-' || attendance.id AS certificate_id
+
         FROM attendance
+
         JOIN students
             ON attendance.student_id = students.id
+
         JOIN events
             ON attendance.event_id = events.id
+
         WHERE attendance.student_id = ?
           AND attendance.status = 'Present'
+
         ORDER BY events.event_date DESC
+
     """, (session["student_id"],)).fetchall()
 
     conn.close()
@@ -445,98 +815,107 @@ def admin_dashboard():
 
     conn = get_db_connection()
 
-    total_students = conn.execute(
-        "SELECT COUNT(*) FROM students"
-    ).fetchone()[0]
+    try:
 
-    total_events = conn.execute(
-        "SELECT COUNT(*) FROM events"
-    ).fetchone()[0]
+        total_students = conn.execute(
+            "SELECT COUNT(*) FROM students"
+        ).fetchone()[0]
 
-    total_attendance = conn.execute(
-        "SELECT COUNT(*) FROM attendance"
-    ).fetchone()[0]
+        total_events = conn.execute(
+            "SELECT COUNT(*) FROM events"
+        ).fetchone()[0]
 
-    total_certificates = conn.execute(
-        "SELECT COUNT(*) FROM attendance WHERE status = 'Present'"
-    ).fetchone()[0]
+        total_attendance = conn.execute(
+            "SELECT COUNT(*) FROM attendance"
+        ).fetchone()[0]
 
-    recent_students = conn.execute(
-        """SELECT id, name, email, registered_at
-           FROM students
-           ORDER BY id DESC
-           LIMIT 5"""
-    ).fetchall()
+        total_certificates = conn.execute(
+            """SELECT COUNT(*) FROM attendance
+               WHERE status = 'Present'"""
+        ).fetchone()[0]
 
-    upcoming_events = conn.execute(
-        """SELECT * FROM events
-           WHERE event_date >= date('now')
-           ORDER BY event_date ASC
-           LIMIT 5"""
-    ).fetchall()
+        recent_students = conn.execute("""
+            SELECT id, name, email, registered_at
+            FROM students
+            ORDER BY id DESC
+            LIMIT 5
+        """).fetchall()
 
-    registration_data = conn.execute("""
-        SELECT
-            strftime('%Y-%m', registered_at) AS month,
-            COUNT(*) AS total
-        FROM students
-        WHERE registered_at IS NOT NULL
-        GROUP BY month
-        ORDER BY month ASC
-    """).fetchall()
+        upcoming_events = conn.execute("""
+            SELECT * FROM events
+            WHERE event_date >= date('now')
+            ORDER BY event_date ASC
+            LIMIT 5
+        """).fetchall()
 
-    registration_labels = [
-        row["month"] for row in registration_data
-    ]
+        registration_data = conn.execute("""
+            SELECT
+                strftime('%Y-%m', registered_at) AS month,
+                COUNT(*) AS total
 
-    registration_counts = [
-        row["total"] for row in registration_data
-    ]
+            FROM students
 
-    attendance_data = conn.execute("""
-        SELECT status, COUNT(*) AS total
-        FROM attendance
-        GROUP BY status
-    """).fetchall()
+            WHERE registered_at IS NOT NULL
 
-    attendance_status_counts = {
-        "Present": 0,
-        "Absent": 0
-    }
+            GROUP BY month
 
-    for row in attendance_data:
+            ORDER BY month ASC
+        """).fetchall()
 
-        if row["status"] in attendance_status_counts:
-            attendance_status_counts[row["status"]] = row["total"]
+        registration_labels = [
+            row["month"] for row in registration_data
+        ]
 
-    attendance_labels = list(attendance_status_counts.keys())
-    attendance_counts = list(attendance_status_counts.values())
+        registration_counts = [
+            row["total"] for row in registration_data
+        ]
 
-    student_months = registration_labels
-    student_counts = registration_counts
+        attendance_data = conn.execute("""
+            SELECT status, COUNT(*) AS total
+            FROM attendance
+            GROUP BY status
+        """).fetchall()
 
-    present_count = attendance_status_counts["Present"]
-    absent_count = attendance_status_counts["Absent"]
+        attendance_status_counts = {
+            "Present": 0,
+            "Absent": 0
+        }
 
-    conn.close()
+        for row in attendance_data:
 
-    return render_template(
-        "admin_dashboard.html",
-        total_students=total_students,
-        total_events=total_events,
-        total_attendance=total_attendance,
-        total_certificates=total_certificates,
-        recent_students=recent_students,
-        upcoming_events=upcoming_events,
-        student_months=student_months,
-        student_counts=student_counts,
-        present_count=present_count,
-        absent_count=absent_count,
-        registration_labels=registration_labels,
-        registration_counts=registration_counts,
-        attendance_labels=attendance_labels,
-        attendance_counts=attendance_counts
-    )
+            if row["status"] in attendance_status_counts:
+                attendance_status_counts[row["status"]] = row["total"]
+
+        attendance_labels = list(attendance_status_counts.keys())
+
+        attendance_counts = list(attendance_status_counts.values())
+
+        return render_template(
+            "admin_dashboard.html",
+
+            total_students=total_students,
+            total_events=total_events,
+            total_attendance=total_attendance,
+            total_certificates=total_certificates,
+
+            recent_students=recent_students,
+            upcoming_events=upcoming_events,
+
+            student_months=registration_labels,
+            student_counts=registration_counts,
+
+            present_count=attendance_status_counts["Present"],
+            absent_count=attendance_status_counts["Absent"],
+
+            registration_labels=registration_labels,
+            registration_counts=registration_counts,
+
+            attendance_labels=attendance_labels,
+            attendance_counts=attendance_counts
+        )
+
+    finally:
+        conn.close()
 
 
 # --------------------------------------------------
@@ -550,7 +929,9 @@ def admin_students():
     conn = get_db_connection()
 
     students = conn.execute(
-        "SELECT id, name, email FROM students ORDER BY id DESC"
+        """SELECT id, name, email
+           FROM students
+           ORDER BY id DESC"""
     ).fetchall()
 
     conn.close()
@@ -636,22 +1017,34 @@ def logout():
 def student_profile():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
 
     student = conn.execute(
-        "SELECT id, name, email FROM students WHERE id = ?",
+        """SELECT id, name, email
+           FROM students
+           WHERE id = ?""",
         (session["student_id"],)
     ).fetchone()
 
     attendance_records = conn.execute(
-        """SELECT events.title, events.event_date,
-                  events.location, attendance.status
+        """SELECT
+               events.title,
+               events.event_date,
+               events.location,
+               attendance.status
+
            FROM attendance
-           JOIN events ON attendance.event_id = events.id
+
+           JOIN events
+               ON attendance.event_id = events.id
+
            WHERE attendance.student_id = ?
+
            ORDER BY events.event_date DESC""",
         (session["student_id"],)
     ).fetchall()
@@ -673,13 +1066,17 @@ def student_profile():
 def student_dashboard():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
 
     student = conn.execute(
-        "SELECT id, name, email FROM students WHERE id = ?",
+        """SELECT id, name, email
+           FROM students
+           WHERE id = ?""",
         (session["student_id"],)
     ).fetchone()
 
@@ -707,7 +1104,9 @@ def student_dashboard():
 def event_registration():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
@@ -744,7 +1143,9 @@ def event_registration():
 def register_event(event_id):
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     student_id = session["student_id"]
@@ -766,7 +1167,8 @@ def register_event(event_id):
 
             existing = conn.execute(
                 """SELECT id FROM event_registrations
-                   WHERE student_id = ? AND event_id = ?""",
+                   WHERE student_id = ?
+                   AND event_id = ?""",
                 (student_id, event_id)
             ).fetchone()
 
@@ -813,13 +1215,16 @@ def register_event(event_id):
 def announcements():
 
     if "student_id" not in session and "admin_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
 
     all_announcements = conn.execute(
-        "SELECT * FROM announcements ORDER BY id DESC"
+        """SELECT * FROM announcements
+           ORDER BY id DESC"""
     ).fetchall()
 
     conn.close()
@@ -865,13 +1270,16 @@ def add_announcement():
 def feedback():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
 
     events = conn.execute(
-        "SELECT id, title FROM events ORDER BY event_date ASC"
+        """SELECT id, title FROM events
+           ORDER BY event_date ASC"""
     ).fetchall()
 
     conn.close()
@@ -890,11 +1298,15 @@ def feedback():
 def submit_feedback():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     event_id = request.form.get("event_id")
+
     rating = request.form.get("rating")
+
     feedback_text = request.form.get(
         "feedback_text", ""
     ).strip()
@@ -923,35 +1335,37 @@ def submit_feedback():
 
     conn = get_db_connection()
 
-    if event_id:
+    try:
 
-        event = conn.execute(
-            "SELECT id FROM events WHERE id = ?",
-            (event_id,)
-        ).fetchone()
+        if event_id:
 
-        if event is None:
+            event = conn.execute(
+                "SELECT id FROM events WHERE id = ?",
+                (event_id,)
+            ).fetchone()
 
-            conn.close()
+            if event is None:
 
-            flash("Invalid event selected.")
+                flash("Invalid event selected.")
 
-            return redirect(url_for("feedback"))
+                return redirect(url_for("feedback"))
 
-    conn.execute(
-        """INSERT INTO feedback
-           (student_id, event_id, feedback_text, rating)
-           VALUES (?, ?, ?, ?)""",
-        (
-            session["student_id"],
-            int(event_id) if event_id else None,
-            feedback_text,
-            rating
+        conn.execute(
+            """INSERT INTO feedback
+               (student_id, event_id, feedback_text, rating)
+               VALUES (?, ?, ?, ?)""",
+            (
+                session["student_id"],
+                int(event_id) if event_id else None,
+                feedback_text,
+                rating
+            )
         )
-    )
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+
+    finally:
+        conn.close()
 
     flash("Feedback submitted successfully!")
 
@@ -977,12 +1391,17 @@ def admin_feedback():
             students.name AS student_name,
             students.email AS email,
             events.title AS event_title
+
         FROM feedback
+
         JOIN students
             ON feedback.student_id = students.id
+
         LEFT JOIN events
             ON feedback.event_id = events.id
+
         ORDER BY feedback.id DESC
+
     """).fetchall()
 
     conn.close()
@@ -1013,6 +1432,7 @@ def admin_notifications():
 def send_notification():
 
     title = request.form.get("title", "").strip()
+
     message = request.form.get("message", "").strip()
 
     if not title or not message:
@@ -1056,7 +1476,9 @@ def send_notification():
 def notifications():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
@@ -1084,18 +1506,25 @@ def notifications():
 def my_registrations():
 
     if "student_id" not in session:
+
         flash("Please login first.")
+
         return redirect(url_for("login"))
 
     conn = get_db_connection()
 
     registrations = conn.execute("""
         SELECT events.*
+
         FROM event_registrations
+
         JOIN events
             ON event_registrations.event_id = events.id
+
         WHERE event_registrations.student_id = ?
+
         ORDER BY events.event_date ASC
+
     """, (session["student_id"],)).fetchall()
 
     conn.close()
@@ -1123,12 +1552,17 @@ def admin_event_registrations():
             events.title,
             events.event_date,
             event_registrations.registration_date
+
         FROM event_registrations
+
         JOIN students
             ON event_registrations.student_id = students.id
+
         JOIN events
             ON event_registrations.event_id = events.id
+
         ORDER BY event_registrations.id DESC
+
     """).fetchall()
 
     conn.close()
@@ -1140,8 +1574,59 @@ def admin_event_registrations():
 
 
 # --------------------------------------------------
+# STUDENT ACHIEVEMENTS AND BADGES
+# --------------------------------------------------
+
+@app.route("/achievements")
+def achievements():
+
+    if "student_id" not in session:
+
+        flash("Please login to view your achievements.")
+
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+
+    attended_count = conn.execute("""
+        SELECT COUNT(DISTINCT event_id)
+
+        FROM attendance
+
+        WHERE student_id = ?
+        AND status = 'Present'
+
+    """, (session["student_id"],)).fetchone()[0]
+
+    conn.close()
+
+    badges = [
+        {"name": "First Step", "required": 1},
+        {"name": "Active Participant", "required": 3},
+        {"name": "Event Champion", "required": 5},
+        {"name": "Campus Star", "required": 10}
+    ]
+
+    for badge in badges:
+        badge["unlocked"] = attended_count >= badge["required"]
+
+    next_badge = next(
+        (badge for badge in badges if not badge["unlocked"]),
+        None
+    )
+
+    return render_template(
+        "achievements.html",
+        badges=badges,
+        attended_count=attended_count,
+        next_badge=next_badge
+    )
+
+
+# --------------------------------------------------
 # APPLICATION START
 # --------------------------------------------------
 
 if __name__ == "__main__":
+
     app.run(debug=False)

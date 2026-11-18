@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event QR Code | CAMPUSCONNECT 360</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>CAMPUSCONNECT 360</h1>
+    <p>Event QR Code Generator</p>
+</header>
+
+<nav>
+    <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('events') }}">Events</a>
+    <a href="{{ url_for('admin_logout') }}">Logout</a>
+</nav>
+
+<section class="card">
+    <h2>{{ event.title }}</h2>
+
+    <p><strong>Date:</strong> {{ event.event_date }}</p>
+    <p><strong>Location:</strong> {{ event.location }}</p>
+
+    <h3>Scan to Mark Attendance</h3>
+
+    <img
+        src="{{ url_for('event_qr_image', event_id=event.id) }}"
+        alt="Event Attendance QR Code"
+        style="width:250px; max-width:100%;"
+    >
+
+    <p>Students must log in and register for this event before confirming attendance.</p>
+
+    <p>
+        <a href="{{ qr_url }}" target="_blank">
+            Open Check-in Link
+        </a>
+    </p>
+
+    <button onclick="window.print()" class="btn">
+        Print QR Code
+    </button>
+</section>
+
+<footer>
+    <p>© 2026 CAMPUSCONNECT 360</p>
+</footer>
+
+</body>
+</html>

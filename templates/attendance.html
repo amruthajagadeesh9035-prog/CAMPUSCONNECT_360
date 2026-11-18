@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Attendance</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Event Attendance | CAMPUSCONNECT 360</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
 <header>
@@ -15,14 +18,17 @@
 </header>
 
 <nav>
-    <a href="/">Home</a>
-    <a href="/events">Events</a>
-    <a href="/attendance">Attendance</a>
-    <a href="/logout">Logout</a>
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('events') }}">Events</a>
+    <a href="{{ url_for('attendance') }}">Attendance</a>
+    <a href="{{ url_for('achievements') }}">My Achievements</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
 </nav>
 
 <section>
-    <h2>Mark Your Attendance</h2>
+
+    <h2>Event Attendance</h2>
+    <p>Scan the event QR code to confirm your attendance.</p>
 
     {% with messages = get_flashed_messages() %}
         {% for message in messages %}
@@ -31,18 +37,27 @@
     {% endwith %}
 
     {% for event in events %}
-    <div class="card">
-        <h3>{{ event.title }}</h3>
-        <p>Date: {{ event.event_date }}</p>
-        <p>Location: {{ event.location }}</p>
 
-        <form action="/mark-attendance" method="POST">
-            <input type="hidden" name="event_id" value="{{ event.id }}">
-            <button type="submit" class="btn">Mark Attendance</button>
-        </form>
+    <div class="card">
+
+        <h3>{{ event.title }}</h3>
+
+        <p><strong>Date:</strong> {{ event.event_date }}</p>
+
+        <p><strong>Location:</strong> {{ event.location }}</p>
+
+        <p>
+            Ask the event administrator for the official QR code.
+            Scan it using your phone camera and follow the confirmation
+            instructions.
+        </p>
+
     </div>
+
     {% else %}
+
         <p>No events are available.</p>
+
     {% endfor %}
 
 </section>

@@ -4,13 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
+
+    <title>Student Dashboard | CAMPUSCONNECT 360</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: #f1f5f9;
             margin: 0;
+            color: #1e293b;
         }
 
         header {
@@ -20,8 +26,20 @@
             text-align: center;
         }
 
+        header h1 {
+            margin-bottom: 8px;
+        }
+
         .container {
             padding: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
         }
 
         .card {
@@ -32,18 +50,79 @@
             box-shadow: 0 3px 10px #ddd;
         }
 
+        .card h3 {
+            color: #243b80;
+            margin-top: 0;
+        }
+
+        .welcome-card {
+            background: #e0eaff;
+            border-left: 5px solid #243b80;
+        }
+
         a {
             display: inline-block;
             background: #243b80;
             color: white;
             padding: 12px 18px;
-            margin: 8px;
+            margin: 8px 4px 0 0;
             text-decoration: none;
             border-radius: 6px;
+            transition: 0.3s;
         }
 
         a:hover {
             background: #4169b1;
+        }
+
+        .achievement {
+            background: #7c3aed;
+        }
+
+        .achievement:hover {
+            background: #6d28d9;
+        }
+
+        .leaderboard {
+            background: #0f766e;
+        }
+
+        .leaderboard:hover {
+            background: #115e59;
+        }
+
+        .notification {
+            background: #d97706;
+        }
+
+        .notification:hover {
+            background: #b45309;
+        }
+
+        .logout {
+            background: #dc2626;
+        }
+
+        .logout:hover {
+            background: #b91c1c;
+        }
+
+        footer {
+            background: #243b80;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .card {
+                padding: 18px;
+            }
         }
     </style>
 </head>
@@ -51,61 +130,201 @@
 <body>
 
 <header>
-    <h1>CampusConnect 360</h1>
+    <h1>CAMPUSCONNECT 360</h1>
     <p>Student Dashboard</p>
+    <p>Welcome to your Smart Campus Portal</p>
 </header>
 
 <div class="container">
 
-    <div class="card">
+    <!-- Welcome Section -->
+    <div class="card welcome-card">
+
         <h2>Welcome, {{ student.name }}!</h2>
-        <p>Manage your campus activities from here.</p>
+
+        <p>
+            Manage your campus activities, participate in events,
+            track your attendance and explore your achievements.
+        </p>
+
     </div>
 
-    <div class="card">
-        <h3>My Profile</h3>
-        <p>Name: {{ student.name }}</p>
-        <p>Email: {{ student.email }}</p>
-        <a href="{{ url_for('student_profile') }}">View Profile</a>
+    <div class="card-container">
+
+        <!-- Student Profile -->
+        <div class="card">
+
+            <h3>My Profile</h3>
+
+            <p><strong>Name:</strong> {{ student.name }}</p>
+
+            <p><strong>Email:</strong> {{ student.email }}</p>
+
+            <a href="{{ url_for('student_profile') }}">
+                View Profile
+            </a>
+
+        </div>
+
+        <!-- Campus Events -->
+        <div class="card">
+
+            <h3>Campus Events</h3>
+
+            <p>Explore upcoming campus activities and programs.</p>
+
+            <a href="{{ url_for('events') }}">
+                View Events
+            </a>
+
+            <a href="{{ url_for('event_registration') }}">
+                Register for Events
+            </a>
+
+            <a href="{{ url_for('my_registrations') }}">
+                My Registrations
+            </a>
+
+        </div>
+
+        <!-- QR Attendance -->
+        <div class="card">
+
+            <h3>QR Code Attendance</h3>
+
+            <p>
+                Scan the event QR code to confirm your
+                participation and record attendance.
+            </p>
+
+            <a href="{{ url_for('attendance') }}">
+                Attendance Portal
+            </a>
+
+        </div>
+
+        <!-- Achievements -->
+        <div class="card">
+
+            <h3>My Achievements</h3>
+
+            <p>
+                Unlock badges by attending campus events.
+                Track your participation achievements.
+            </p>
+
+            <a href="{{ url_for('achievements') }}"
+               class="achievement">
+                View My Badges
+            </a>
+
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="card">
+
+            <h3>Student Leaderboard</h3>
+
+            <p>
+                Explore student participation rankings
+                and campus activity points.
+            </p>
+
+            <a href="{{ url_for('leaderboard') }}"
+               class="leaderboard">
+                View Leaderboard
+            </a>
+
+        </div>
+
+        <!-- Announcements -->
+        <div class="card">
+
+            <h3>Campus Announcements</h3>
+
+            <p>
+                Stay updated with important campus news
+                and announcements.
+            </p>
+
+            <a href="{{ url_for('announcements') }}">
+                View Announcements
+            </a>
+
+        </div>
+
+        <!-- Certificates -->
+        <div class="card">
+
+            <h3>My Certificates</h3>
+
+            <p>
+                View your event participation certificates.
+            </p>
+
+            <a href="{{ url_for('certificates') }}">
+                View Certificates
+            </a>
+
+        </div>
+
+        <!-- Feedback -->
+        <div class="card">
+
+            <h3>Student Feedback</h3>
+
+            <p>
+                Share your suggestions and rate campus events.
+            </p>
+
+            <a href="{{ url_for('feedback') }}">
+                Give Feedback
+            </a>
+
+        </div>
+
+        <!-- Notifications -->
+        <div class="card">
+
+            <h3>Student Notifications</h3>
+
+            <p>
+                Read important college updates and messages
+                from the administrator.
+            </p>
+
+            <a href="{{ url_for('notifications') }}"
+               class="notification">
+                View Notifications
+            </a>
+
+        </div>
+
     </div>
 
+    <!-- Account Section -->
     <div class="card">
-        <h3>Campus Activities</h3>
 
-        <a href="{{ url_for('events') }}">View Events</a>
-
-        <a href="{{ url_for('event_registration') }}">
-            Register for Events
-        </a>
-
-        <a href="{{ url_for('announcements') }}">
-            View Announcements
-        </a>
-
-        <a href="{{ url_for('attendance') }}">Mark Attendance</a>
-
-        <a href="{{ url_for('certificates') }}">Certificates</a>
-        <a href="{{ url_for('home') }}" class="btn">Home</a>
-    </div>
-
-    <div class="card">
-        <h3>Student Feedback</h3>
-        <p>Share your suggestions and rate campus events.</p>
-        <a href="{{ url_for('feedback') }}">Give Feedback</a>
-    </div>
-
-    <div class="card">
-        <h3>Student Notifications</h3>
-        <p>Read important college updates and messages from the admin.</p>
-        <a href="{{ url_for('notifications') }}">View Notifications</a>
-    </div>
-
-    <div class="card">
         <h3>Account</h3>
-        <a href="{{ url_for('logout') }}">Logout</a>
+
+        <p>Logout securely from your student account.</p>
+
+        <a href="{{ url_for('logout') }}" class="logout">
+            Logout
+        </a>
+
+        <a href="{{ url_for('home') }}">
+            Home
+        </a>
+
     </div>
 
 </div>
+
+<footer>
+    <p>© 2026 CAMPUSCONNECT 360</p>
+    <p>GDG on Campus - Rajeev Institute of Technology, Hassan</p>
+</footer>
 
 </body>
 </html>

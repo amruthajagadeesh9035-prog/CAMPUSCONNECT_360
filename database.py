@@ -1,5 +1,6 @@
 
 import sqlite3
+import secrets
 
 DATABASE = "campusconnect.db"
 
@@ -25,7 +26,7 @@ def create_tables():
         )
     """)
 
-    # Check Student Table Columns
+    # Add registered_at to existing students table
     student_columns = [
         row["name"]
         for row in conn.execute(
@@ -38,7 +39,6 @@ def create_tables():
             "ALTER TABLE students ADD COLUMN registered_at TEXT"
         )
 
-    # Update Existing Student Registration Dates
     conn.execute("""
         UPDATE students
         SET registered_at = CURRENT_TIMESTAMP
@@ -55,6 +55,35 @@ def create_tables():
             location TEXT
         )
     """)
+
+    # Add QR token to existing events table
+    event_columns = [
+        row["name"]
+        for row in conn.execute(
+            "PRAGMA table_info(events)"
+        ).fetchall()
+    ]
+
+    if "attendance_token" not in event_columns:
+        conn.execute(
+            "ALTER TABLE events ADD COLUMN attendance_token TEXT"
+        )
+
+    # Generate unique tokens for existing events
+    existing_events = conn.execute("""
+        SELECT id FROM events
+        WHERE attendance_token IS NULL
+        OR attendance_token = ''
+    """).fetchall()
+
+    for event in existing_events:
+        token = secrets.token_urlsafe(32)
+
+        conn.execute("""
+            UPDATE events
+            SET attendance_token = ?
+            WHERE id = ?
+        """, (token, event["id"]))
 
     # Attendance Table
     conn.execute("""
@@ -122,7 +151,7 @@ def create_tables():
         )
     """)
 
-    # Add Student ID to Existing Notifications Table
+    # Add Student ID to existing notifications table
     notification_columns = [
         row["name"]
         for row in conn.execute(
