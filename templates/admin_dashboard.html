@@ -281,6 +281,41 @@
             margin-bottom: 12px;
         }
 
+        /* EVENT REGISTRATION ACTION */
+        .registration-action {
+            text-decoration: none;
+            color: white;
+            background: linear-gradient(135deg,#4338ca,#7c3aed);
+            padding: 20px;
+            border-radius: 16px;
+            display: block;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,.1);
+            transition: .3s;
+        }
+
+        .registration-action:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(135deg,#5265e9,#8755dc);
+        }
+
+        .registration-action h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .registration-action p {
+            font-size: 11px;
+            color: #e0e7ff;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .registration-action span {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
         /* TABLES */
         .table-card {
             background: #131e3b;
@@ -592,16 +627,18 @@
             <div>🌐</div>
             Home Page
         </a>
-<a href="{{ url_for('admin_event_registrations') }}"
-   style="text-decoration:none; color:white; background:linear-gradient(135deg,#4338ca,#7c3aed); padding:25px; border-radius:15px; display:block; margin:15px 0;">
 
-    <h3>📋 Event Registration Management</h3>
+        <a href="{{ url_for('admin_event_registrations') }}"
+           class="registration-action">
 
-    <p>View students registered for campus events.</p>
+            <h3>📋 Event Registration Management</h3>
 
-    <span>View Registrations →</span>
+            <p>View students registered for campus events.</p>
 
-</a>
+            <span>View Registrations →</span>
+
+        </a>
+
         <a href="{{ url_for('add_event') }}" class="action-card">
             <div>➕</div>
             Add Event
@@ -708,6 +745,7 @@
     </div>
 
 
+    <!-- FOOTER -->
     <footer>
         © 2026 <span>CAMPUSCONNECT 360</span>
         | Connecting Campus, Creating Opportunities
@@ -718,116 +756,133 @@
 
 <!-- CHART DATA -->
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (typeof Chart === "undefined") {
+        console.error("Chart.js could not be loaded.");
+        return;
+    }
 
     Chart.defaults.color = '#b7c5e5';
     Chart.defaults.font.family = 'Inter';
 
-    const registrationLabels =
-        {{ registration_labels | tojson }};
+    // Flask data converted into JavaScript data
+    const registrationLabels = JSON.parse(
+        '{{ registration_labels | tojson | safe }}'
+    );
 
-    const registrationCounts =
-        {{ registration_counts | tojson }};
+    const registrationCounts = JSON.parse(
+        '{{ registration_counts | tojson | safe }}'
+    );
 
-    const registrationCtx = document.getElementById(
+    const attendanceLabels = JSON.parse(
+        '{{ attendance_labels | tojson | safe }}'
+    );
+
+    const attendanceCounts = JSON.parse(
+        '{{ attendance_counts | tojson | safe }}'
+    );
+
+    // STUDENT REGISTRATION CHART
+    const registrationCanvas = document.getElementById(
         'studentRegistrationChart'
-    ).getContext('2d');
+    );
 
-    new Chart(registrationCtx, {
+    if (registrationCanvas) {
 
-        type: 'bar',
+        new Chart(registrationCanvas, {
 
-        data: {
-            labels: registrationLabels,
+            type: 'bar',
 
-            datasets: [{
-                label: 'Number of Students',
-                data: registrationCounts,
-                backgroundColor: '#6575f5',
-                borderColor: '#65d5ff',
-                borderWidth: 1,
-                borderRadius: 8,
-                maxBarThickness: 55
-            }]
-        },
+            data: {
+                labels: registrationLabels,
 
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
+                datasets: [{
+                    label: 'Number of Students',
+                    data: registrationCounts,
+                    backgroundColor: '#6575f5',
+                    borderColor: '#65d5ff',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    maxBarThickness: 55
+                }]
+            },
 
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        },
+                        grid: {
+                            color: 'rgba(255,255,255,0.07)'
+                        }
                     },
-                    grid: {
-                        color: 'rgba(255,255,255,0.07)'
+
+                    x: {
+                        grid: {
+                            display: false
+                        }
                     }
                 },
 
-                x: {
-                    grid: {
-                        display: false
+                plugins: {
+                    legend: {
+                        display: true
                     }
                 }
+            }
+        });
+    }
+
+    // ATTENDANCE CHART
+    const attendanceCanvas = document.getElementById(
+        'attendanceChart'
+    );
+
+    if (attendanceCanvas) {
+
+        new Chart(attendanceCanvas, {
+
+            type: 'doughnut',
+
+            data: {
+                labels: attendanceLabels,
+
+                datasets: [{
+                    data: attendanceCounts,
+
+                    backgroundColor: [
+                        '#6575f5',
+                        '#20c997',
+                        '#ffb454',
+                        '#ed6a8a'
+                    ],
+
+                    borderColor: '#131e3b',
+                    borderWidth: 4,
+                    hoverOffset: 10
+                }]
             },
 
-            plugins: {
-                legend: {
-                    display: true
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
-        }
+        });
+    }
 
-    });
-
-
-    const attendanceLabels =
-        {{ attendance_labels | tojson }};
-
-    const attendanceCounts =
-        {{ attendance_counts | tojson }};
-
-    const attendanceCtx = document.getElementById(
-        'attendanceChart'
-    ).getContext('2d');
-
-    new Chart(attendanceCtx, {
-
-        type: 'doughnut',
-
-        data: {
-            labels: attendanceLabels,
-
-            datasets: [{
-                data: attendanceCounts,
-
-                backgroundColor: [
-                    '#6575f5',
-                    '#20c997',
-                    '#ffb454',
-                    '#ed6a8a'
-                ],
-
-                borderColor: '#131e3b',
-                borderWidth: 4,
-                hoverOffset: 10
-            }]
-        },
-
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-
-    });
-
+});
 </script>
 
 </body>

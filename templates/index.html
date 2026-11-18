@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>GDG (Google Developer Groups)</title>
+    <title>GDG on Campus | CAMPUSCONNECT 360</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
@@ -40,7 +40,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255,255,255,0.92);
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(15px);
             position: sticky;
             top: 0;
@@ -61,12 +61,12 @@
         .nav-links {
             display: flex;
             align-items: center;
-            gap: 25px;
+            gap: 22px;
         }
 
         .nav-links a {
             color: #334155;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             transition: 0.3s;
         }
@@ -126,10 +126,11 @@
         }
 
         .hero h1 span {
-            background: linear-gradient(90deg, #2563eb, #9333ea);
-            -webkit-background-clip: text;
-            color: transparent;
-        }
+    background: linear-gradient(90deg, #2563eb, #9333ea);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
 
         .hero p {
             color: #475569;
@@ -145,6 +146,7 @@
         }
 
         .btn-primary {
+            display: inline-block;
             background: linear-gradient(90deg, #2563eb, #7c3aed);
             color: white;
             padding: 15px 28px;
@@ -160,6 +162,7 @@
         }
 
         .btn-secondary {
+            display: inline-block;
             border: 2px solid #64748b;
             color: #263b80;
             padding: 13px 27px;
@@ -222,7 +225,7 @@
             left: -30px;
         }
 
-        /* INFO STRIP */
+        /* INFORMATION STRIP */
 
         .info-strip {
             display: flex;
@@ -413,7 +416,7 @@
             font-size: 14px;
         }
 
-        /* FEATURES - CLICKABLE CARDS */
+        /* FEATURES */
 
         .features {
             background: #eef3ff;
@@ -433,7 +436,6 @@
             border: 1px solid #e2e8f0;
             box-shadow: 0 8px 25px rgba(30,41,59,0.04);
             transition: 0.3s;
-            text-decoration: none;
             color: inherit;
             cursor: pointer;
         }
@@ -542,6 +544,16 @@
         /* RESPONSIVE DESIGN */
 
         @media(max-width: 900px) {
+            nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
             .hero {
                 flex-direction: column;
                 text-align: center;
@@ -574,13 +586,19 @@
 
         @media(max-width: 600px) {
             nav {
-                flex-direction: column;
-                gap: 15px;
+                padding: 16px 5%;
+            }
+
+            .logo {
+                font-size: 19px;
+                text-align: center;
+            }
+
+            .logo span {
+                font-size: 12px;
             }
 
             .nav-links {
-                justify-content: center;
-                flex-wrap: wrap;
                 gap: 12px;
             }
 
@@ -650,7 +668,7 @@
 
     <nav>
         <div class="logo">
-            GDG <span>(GOOGLE DEVELOPERS GROUP)</span>
+            GDG <span>ON CAMPUS</span>
         </div>
 
         <div class="nav-links">
@@ -689,7 +707,6 @@
             </p>
 
             <div class="hero-buttons">
-
                 <a href="{{ url_for('register') }}" class="btn-primary">
                     Get Started →
                 </a>
@@ -697,16 +714,12 @@
                 <a href="#about" class="btn-secondary">
                     Explore More
                 </a>
-
             </div>
 
         </div>
 
         <div class="hero-visual">
-
-            <div class="hero-circle">
-                🎓
-            </div>
+            <div class="hero-circle">🎓</div>
 
             <div class="floating-label label-one">
                 🚀 Smart Campus
@@ -715,7 +728,6 @@
             <div class="floating-label label-two">
                 💡 Student Connect
             </div>
-
         </div>
 
     </header>
@@ -723,12 +735,10 @@
     <!-- INFORMATION STRIP -->
 
     <div class="info-strip">
-
         <div class="info-item">🎓 Student Engagement</div>
         <div class="info-item">📅 Campus Events</div>
         <div class="info-item">📢 Announcements</div>
         <div class="info-item">💻 Smart Technology</div>
-
     </div>
 
     <!-- ORGANIZATION LOGOS -->
@@ -747,7 +757,6 @@
         <div class="logo-grid">
 
             <div class="logo-card">
-
                 <div class="logo-box">
                     <img src="{{ url_for('static', filename='images/gdg.jpeg') }}"
                          alt="GDG on Campus Logo">
@@ -755,11 +764,9 @@
 
                 <h3>GDG on Campus</h3>
                 <p>Rajeev Institute of Technology</p>
-
             </div>
 
             <div class="logo-card">
-
                 <div class="logo-box">
                     <img src="{{ url_for('static', filename='images/clg logo.jpeg') }}"
                          alt="Rajeev Institute of Technology Logo">
@@ -767,11 +774,9 @@
 
                 <h3>Rajeev Institute of Technology</h3>
                 <p>Hassan, Karnataka</p>
-
             </div>
 
             <div class="logo-card">
-
                 <div class="logo-box">
                     <img src="{{ url_for('static', filename='images/dept logo.jpeg') }}"
                          alt="Computer Science and Engineering Department Logo">
@@ -779,7 +784,6 @@
 
                 <h3>Department of CSE</h3>
                 <p>Computer Science and Engineering</p>
-
             </div>
 
         </div>
@@ -794,7 +798,8 @@
 
             <div class="about-text">
 
-                <div class="section-heading" style="text-align:left; margin-bottom:25px;">
+                <div class="section-heading"
+                     style="text-align:left; margin-bottom:25px;">
                     <small>About Our Platform</small>
                 </div>
 
@@ -881,7 +886,7 @@
 
     </section>
 
-    <!-- FEATURES - ALL CARDS CLICKABLE -->
+    <!-- FEATURES -->
 
     <section class="features">
 
@@ -896,94 +901,58 @@
 
         <div class="feature-grid">
 
-            <!-- SECURE LOGIN -->
-
             <a href="{{ url_for('login') }}" class="feature-card">
-
                 <div class="icon">🔐</div>
-
                 <h3>Secure Login</h3>
-
                 <p>
                     Student login access for the campus portal.
                     Click here to access your account.
                 </p>
-
             </a>
 
-            <!-- EVENT REGISTRATION -->
-
             <a href="{{ url_for('events') }}" class="feature-card">
-
                 <div class="icon">📝</div>
-
                 <h3>Event Registration</h3>
-
                 <p>
                     Explore available campus events and
                     proceed to event registration.
                 </p>
-
             </a>
 
-            <!-- CAMPUS UPDATES -->
-
             <a href="{{ url_for('announcements') }}" class="feature-card">
-
                 <div class="icon">📣</div>
-
                 <h3>Campus Updates</h3>
-
                 <p>
                     View important announcements, campus
                     notifications and updates.
                 </p>
-
             </a>
 
-            <!-- ADMIN DASHBOARD -->
-
             <a href="{{ url_for('admin_login') }}" class="feature-card">
-
                 <div class="icon">📊</div>
-
                 <h3>Admin Dashboard</h3>
-
                 <p>
                     Access the administrator login to manage
                     supported campus information.
                 </p>
-
             </a>
 
-            <!-- RESPONSIVE DESIGN -->
-
             <a href="#about" class="feature-card">
-
                 <div class="icon">📱</div>
-
                 <h3>Responsive Design</h3>
-
                 <p>
                     Explore a user-friendly interface designed
                     for mobile, tablet and desktop screens.
                 </p>
-
             </a>
 
-            <!-- DIGITAL CAMPUS -->
-
             <a href="#contact" class="feature-card">
-
                 <div class="icon">🌐</div>
-
                 <h3>Digital Campus</h3>
-
                 <p>
                     Discover our connected digital campus
                     and student engagement platform.
                 </p>
-
             </a>
 
         </div>

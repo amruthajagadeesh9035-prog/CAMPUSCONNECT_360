@@ -45,6 +45,10 @@
             border-radius: 7px;
         }
 
+        header a:hover {
+            background: #1d4ed8;
+        }
+
         .container {
             width: 90%;
             max-width: 1200px;
@@ -81,6 +85,11 @@
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+            transition: .3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
         }
 
         .stat-card h3 {
@@ -167,6 +176,7 @@
         }
 
         .chart-box {
+            position: relative;
             min-width: 0;
             height: 320px;
             padding: 15px;
@@ -194,19 +204,26 @@
             .section {
                 padding: 18px;
             }
+
+            .container {
+                width: 94%;
+            }
         }
     </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <header>
     <h2>GDG CAMPUSCONNECT 360</h2>
     <a href="{{ url_for('home') }}">Back to Home</a>
 </header>
 
+
 <div class="container">
 
+    <!-- HERO -->
     <div class="hero">
         <h1>🏆 Student Leaderboard</h1>
         <p>
@@ -215,6 +232,8 @@
         </p>
     </div>
 
+
+    <!-- STATISTICS -->
     <div class="stats">
 
         <div class="stat-card">
@@ -245,7 +264,9 @@
     </div>
 
 
+    <!-- TOP THREE STUDENTS -->
     <div class="section">
+
         <h2>🥇 Top Three Students</h2>
 
         {% if students %}
@@ -287,10 +308,13 @@
         </div>
 
         {% endif %}
+
     </div>
 
 
+    <!-- STUDENT RANKINGS -->
     <div class="section">
+
         <h2>🏅 Student Rankings</h2>
 
         {% if students %}
@@ -346,10 +370,13 @@
         </div>
 
         {% endif %}
+
     </div>
 
 
+    <!-- PARTICIPATION ANALYTICS -->
     <div class="section">
+
         <h2>📊 Student Participation Analytics</h2>
 
         {% if students %}
@@ -373,49 +400,84 @@
         </div>
 
         {% endif %}
+
     </div>
 
 
+    <!-- MONTHLY REGISTRATIONS -->
     <div class="section">
+
         <h2>📅 Monthly Event Registrations</h2>
 
         <div class="chart-box">
             <canvas id="monthlyChart"></canvas>
         </div>
+
     </div>
 
 
+    <!-- EVENT-WISE REGISTRATIONS -->
     <div class="section">
+
         <h2>🎯 Event-wise Registrations</h2>
 
         <div class="chart-box">
             <canvas id="eventChart"></canvas>
         </div>
+
     </div>
 
 </div>
 
 
+<!-- FOOTER -->
 <footer>
     <p>© 2026 GDG CAMPUSCONNECT 360 | CODESTORM 2026</p>
 </footer>
 
 
+<!-- CHART JAVASCRIPT -->
 <script>
+document.addEventListener("DOMContentLoaded", function () {
 
-    const studentLabels = {{ chart_labels | tojson }};
-    const studentPoints = {{ chart_points | tojson }};
+    if (typeof Chart === "undefined") {
+        console.error("Chart.js could not be loaded.");
+        return;
+    }
 
-    const monthlyLabels = {{ monthly_labels | tojson }};
-    const monthlyCounts = {{ monthly_counts | tojson }};
+    // CONVERT FLASK DATA INTO JAVASCRIPT DATA
+    const studentLabels = JSON.parse(
+        '{{ chart_labels | tojson | safe }}'
+    );
 
-    const eventLabels = {{ event_labels | tojson }};
-    const eventCounts = {{ event_counts | tojson }};
+    const studentPoints = JSON.parse(
+        '{{ chart_points | tojson | safe }}'
+    );
+
+    const monthlyLabels = JSON.parse(
+        '{{ monthly_labels | tojson | safe }}'
+    );
+
+    const monthlyCounts = JSON.parse(
+        '{{ monthly_counts | tojson | safe }}'
+    );
+
+    const eventLabels = JSON.parse(
+        '{{ event_labels | tojson | safe }}'
+    );
+
+    const eventCounts = JSON.parse(
+        '{{ event_counts | tojson | safe }}'
+    );
 
 
-    if (studentLabels.length > 0) {
+    // STUDENT PARTICIPATION BAR CHART
+    const studentCanvas = document.getElementById("studentChart");
 
-        new Chart(document.getElementById("studentChart"), {
+    if (studentCanvas && studentLabels.length > 0) {
+
+        new Chart(studentCanvas, {
+
             type: "bar",
 
             data: {
@@ -424,24 +486,39 @@
                 datasets: [{
                     label: "Student Points",
                     data: studentPoints,
-                    backgroundColor: "#3b82f6"
+                    backgroundColor: "#3b82f6",
+                    borderRadius: 7
                 }]
             },
 
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+
                 plugins: {
                     title: {
                         display: true,
                         text: "Student Participation Points"
                     }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
         });
+    }
 
 
-        new Chart(document.getElementById("pointsChart"), {
+    // STUDENT POINTS DOUGHNUT CHART
+    const pointsCanvas = document.getElementById("pointsChart");
+
+    if (pointsCanvas && studentLabels.length > 0) {
+
+        new Chart(pointsCanvas, {
+
             type: "doughnut",
 
             data: {
@@ -450,6 +527,7 @@
                 datasets: [{
                     label: "Points",
                     data: studentPoints,
+
                     backgroundColor: [
                         "#2563eb",
                         "#16a34a",
@@ -464,60 +542,95 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+
                 plugins: {
                     title: {
                         display: true,
                         text: "Student Points Distribution"
+                    },
+
+                    legend: {
+                        position: "bottom"
                     }
                 }
             }
         });
-
     }
 
 
-    new Chart(document.getElementById("monthlyChart"), {
-        type: "line",
+    // MONTHLY REGISTRATION LINE CHART
+    const monthlyCanvas = document.getElementById("monthlyChart");
 
-        data: {
-            labels: monthlyLabels,
+    if (monthlyCanvas) {
 
-            datasets: [{
-                label: "Registrations",
-                data: monthlyCounts,
-                borderColor: "#2563eb",
-                backgroundColor: "rgba(37, 99, 235, 0.15)",
-                fill: true,
-                tension: 0.3
-            }]
-        },
+        new Chart(monthlyCanvas, {
 
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
+            type: "line",
+
+            data: {
+                labels: monthlyLabels,
+
+                datasets: [{
+                    label: "Registrations",
+                    data: monthlyCounts,
+                    borderColor: "#2563eb",
+                    backgroundColor: "rgba(37, 99, 235, 0.15)",
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
 
 
-    new Chart(document.getElementById("eventChart"), {
-        type: "bar",
+    // EVENT-WISE REGISTRATION BAR CHART
+    const eventCanvas = document.getElementById("eventChart");
 
-        data: {
-            labels: eventLabels,
+    if (eventCanvas) {
 
-            datasets: [{
-                label: "Registrations",
-                data: eventCounts,
-                backgroundColor: "#16a34a"
-            }]
-        },
+        new Chart(eventCanvas, {
 
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
+            type: "bar",
 
+            data: {
+                labels: eventLabels,
+
+                datasets: [{
+                    label: "Registrations",
+                    data: eventCounts,
+                    backgroundColor: "#16a34a",
+                    borderRadius: 7
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+});
 </script>
 
 </body>
